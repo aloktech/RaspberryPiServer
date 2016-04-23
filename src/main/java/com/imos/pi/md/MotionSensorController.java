@@ -13,19 +13,22 @@ import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
 import java.util.Timer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Schedule;
 import javax.ejb.Stateless;
+import lombok.extern.java.Log;
 
 /**
  *
  * @author Alok Ranjan
  */
 @Stateless
+@Log
 public class MotionSensorController {
 
-    public boolean canSendMail;
+    public AtomicBoolean canSendMail;
 
     public MotionSensorController() {
     }
@@ -35,7 +38,7 @@ public class MotionSensorController {
             try {
                 gpioConfiguration();
             } catch (InterruptedException ex) {
-                Logger.getLogger(MotionSensorBean.class.getName()).log(Level.SEVERE, null, ex);
+                log.severe(ex.getMessage());
             }
         }).start();
     }
@@ -55,6 +58,7 @@ public class MotionSensorController {
             motionSensor(gpio, led);
 
         } catch (InterruptedException e) {
+            log.severe(e.getMessage());
             throw e;
         } finally {
             if (led != null) {
@@ -71,14 +75,15 @@ public class MotionSensorController {
 
     @Schedule(second = "0", minute = "*/1", hour = "*", persistent = false)
     public void statusUpdate() {
-        if (canSendMail) {
+        if (canSendMail.get()) {
             try {
                 Timer timer = new Timer();
                 ScheduledTask st = new ScheduledTask();
                 timer.schedule(st, 0, 60000);
             } catch (Exception e) {
+                log.severe(e.getMessage());
             } finally {
-                canSendMail = false;
+                canSendMail.set(false);
             }
         }
     }

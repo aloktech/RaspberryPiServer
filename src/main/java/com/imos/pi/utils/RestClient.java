@@ -10,6 +10,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import lombok.Getter;
+import lombok.Setter;
 import org.glassfish.jersey.client.ClientConfig;
 
 /**
@@ -19,8 +21,11 @@ import org.glassfish.jersey.client.ClientConfig;
 public class RestClient {
 
     private WebTarget target;
+    @Setter @Getter
     private String baseUrl, data;
+    @Setter @Getter
     private List<String> paths;
+    @Setter @Getter
     private HttpMethod httpMethod;
 
     public RestClient() {
@@ -75,34 +80,6 @@ public class RestClient {
             baseUrl = "http://192.168.1.34:8090/BasicRESTService/";
         }
         return UriBuilder.fromUri(baseUrl).build();
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    public List<String> getPaths() {
-        return paths;
-    }
-
-    public void setPaths(List<String> paths) {
-        this.paths = paths;
-    }
-
-    public void setHttpMethod(HttpMethod httpMethod) {
-        this.httpMethod = httpMethod;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
     }
 
 }

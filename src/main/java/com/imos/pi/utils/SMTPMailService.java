@@ -18,23 +18,29 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import lombok.extern.java.Log;
 
 /**
  *
  * @author Alok Ranjan
  */
+@Log
 public class SMTPMailService {
 
-    TimeUtils timeUtils;
+    private TimeUtils timeUtils;
 
-    // Get system properties
     private Properties mailProperties;
 
     private final Authenticator authenticator;
-    
+
     private File folder;
 
+    private File[] files;
+
+    private Transport transport;
+
     public SMTPMailService() {
+        
         timeUtils = new TimeUtils();
 
         mailProperties = System.getProperties();
@@ -61,47 +67,12 @@ public class SMTPMailService {
         Session session = Session.getDefaultInstance(mailProperties, authenticator);
 
         try {
-            MimeMessage message;
-
             folder = new File(videoFilePath);
+            files = folder.listFiles();
+            for (File file : files) {
 
-            // Create the message body part
-            BodyPart messageBodyPart;
+                attachFile(file, session);
 
-            DataSource source;
-            for (File tfile : folder.listFiles()) {
-                // Create a multipart message for attachment
-                Multipart multipart = new MimeMultipart();
-                if (tfile.getName().endsWith(".mp4")) {
-                    double bytes = tfile.length();
-                    double kilobytes = (bytes / 1024);
-                    double megabytes = (kilobytes / 1024);
-                    if (megabytes < 24) {
-                        message = configure(session);
-                        messageBodyPart = new MimeBodyPart();
-                        source = new FileDataSource(tfile);
-                        messageBodyPart.setDataHandler(new DataHandler(source));
-                        messageBodyPart.setFileName(source.getName());
-                        multipart.addBodyPart(messageBodyPart);
-                        message.setContent(multipart);
-
-                        // Send message
-                        Transport transport = session.getTransport("smtp");
-                        transport.connect("smtp.gmail.com", "alok.r.meher@gmail.com", "gun1anew*point");
-                        transport.sendMessage(message, message.getAllRecipients());
-                        transport.close();
-                    }
-
-                }
-            }
-        } catch (MessagingException mex) {
-            mex.printStackTrace();
-            return false;
-        } catch (Exception mex) {
-            mex.printStackTrace();
-            return false;
-        } finally {
-            for (File file : folder.listFiles()) {
                 if (file.exists()) {
                     if (file.getName().endsWith("h264")) {
                         file.delete();
@@ -114,8 +85,59 @@ public class SMTPMailService {
                     }
                 }
             }
+        } catch (Exception mex) {
+            log.severe(mex.getMessage());
+            return false;
+        } finally {
+            if (transport != null) {
+                try {
+                    transport.close();
+                } catch (MessagingException ex) {
+                    log.severe(ex.getMessage());
+                }
+            }
         }
         return true;
+    }
+
+    private void attachFile(File tfile, Session session) {
+        try {
+            MimeMessage message;
+            BodyPart messageBodyPart;
+            DataSource source;
+            // Create a multipart message for attachment
+            Multipart multipart = new MimeMultipart();
+            if (tfile.getName().endsWith(".mp4")) {
+                double bytes = tfile.length();
+                double kilobytes = (bytes / 1024);
+                double megabytes = (kilobytes / 1024);
+                if (megabytes < 24) {
+                    message = configure(session);
+                    messageBodyPart = new MimeBodyPart();
+                    source = new FileDataSource(tfile);
+                    messageBodyPart.setDataHandler(new DataHandler(source));
+                    messageBodyPart.setFileName(source.getName());
+                    multipart.addBodyPart(messageBodyPart);
+                    message.setContent(multipart);
+
+                    // Send message
+                    transport = session.getTransport("smtp");
+                    transport.connect("smtp.gmail.com", "alok.r.meher@gmail.com", "gun1anew*point");
+                    transport.sendMessage(message, message.getAllRecipients());
+                }
+            }
+        } catch (MessagingException e) {
+            log.severe(e.getMessage());
+        } finally {
+            if (transport != null) {
+                try {
+                    transport.close();
+                } catch (MessagingException ex) {
+                    log.severe(ex.getMessage());
+                }
+            }
+        }
+
     }
 
     public MimeMessage configure(Session session) throws MessagingException {

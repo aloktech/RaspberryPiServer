@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
 
 /**
  *
@@ -34,12 +35,13 @@ public class ScheduledTask extends TimerTask {
     private final AtomicBoolean sendMail = new AtomicBoolean(false);
     private final AtomicLong timeDelay = new AtomicLong();
 
-    private final TimeUtils timeUtils;
+    @Inject
+    private TimeUtils timeUtils;
 
     private final SMTPMailService mailService;
 
     public ScheduledTask() {
-        timeUtils = new TimeUtils();
+//        timeUtils = new TimeUtils();
 
         mailService = new SMTPMailService();
     }

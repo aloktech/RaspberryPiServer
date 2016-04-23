@@ -10,11 +10,13 @@ import static com.imos.pi.utils.RaspberryPiConstant.UNDER_SCORE;
 import static com.imos.pi.utils.RaspberryPiConstant.COLON;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import javax.inject.Singleton;
 
 /**
  *
  * @author Alok
  */
+@Singleton
 public class TimeUtils {
 
     private final Calendar INSTANCE = GregorianCalendar.getInstance();
