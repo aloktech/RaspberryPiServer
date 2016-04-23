@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
 
 /**
  *
@@ -33,8 +32,7 @@ public class MotionSensorListener implements GpioPinListenerDigital {
     private final int fileNameIndex = 12;
     private final int timeIndex = 14;
 
-    @Inject
-    private TimeUtils timeUtils;
+    private final TimeUtils timeUtils;
 
     public MotionSensorListener(GpioPinDigitalOutput led,MotionSensorController motionSensorCtrl) {
         this.led = led;
@@ -57,7 +55,7 @@ public class MotionSensorListener implements GpioPinListenerDigital {
         captureVideoForTime.add("-t");
         captureVideoForTime.add("");
         
-//        timeUtils = new TimeUtils();
+        timeUtils = new TimeUtils();
     }
 
     @Override

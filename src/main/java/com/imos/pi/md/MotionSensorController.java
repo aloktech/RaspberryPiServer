@@ -14,8 +14,6 @@ import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
 import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Schedule;
 import javax.ejb.Stateless;
 import lombok.extern.java.Log;
@@ -31,6 +29,7 @@ public class MotionSensorController {
     public AtomicBoolean canSendMail;
 
     public MotionSensorController() {
+        canSendMail = new AtomicBoolean();
     }
 
     public void execute() {

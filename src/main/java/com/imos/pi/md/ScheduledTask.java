@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
 
 /**
  *
@@ -33,15 +32,13 @@ public class ScheduledTask extends TimerTask {
     private final String mp4boxCommand = "MP4Box",
             mp4SplitCommand = "MP4Box -splits 22000 ", endWithVideo = ".h264";
     private final AtomicBoolean sendMail = new AtomicBoolean(false);
-    private final AtomicLong timeDelay = new AtomicLong();
 
-    @Inject
-    private TimeUtils timeUtils;
+    private final TimeUtils timeUtils;
 
     private final SMTPMailService mailService;
 
     public ScheduledTask() {
-//        timeUtils = new TimeUtils();
+        timeUtils = new TimeUtils();
 
         mailService = new SMTPMailService();
     }
