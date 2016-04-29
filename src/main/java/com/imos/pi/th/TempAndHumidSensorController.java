@@ -31,7 +31,7 @@ import org.json.JSONObject;
  * @author Alok Ranjan
  */
 @Stateless
-public class TemperatureSensorBeanController {
+public class TempAndHumidSensorController {
 
     private String data;
     private final String temperatue = "Temp=", celcius = "*", humidity = "Humidity=", percentage = "%",
@@ -49,7 +49,7 @@ public class TemperatureSensorBeanController {
 
     private final TimeUtils timeUtils;
 
-    public TemperatureSensorBeanController() {
+    public TempAndHumidSensorController() {
         command = new ArrayList<>();
         command.add("sudo");
         command.add("python");
@@ -85,9 +85,9 @@ public class TemperatureSensorBeanController {
             jsonData.put(tempStr, temp);
             jsonData.put(humidStr, humid);
             map.put(timeWithDate, jsonData.toString());
-            Logger.getLogger(TemperatureSensorBeanController.class.getName()).log(Level.INFO, timeWithDate);
+            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.INFO, timeWithDate);
         } catch (NumberFormatException | JSONException e) {
-            Logger.getLogger(TemperatureSensorBeanController.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, e);
         }
 
     }
@@ -110,22 +110,12 @@ public class TemperatureSensorBeanController {
         });
 
         try {
-//            StringBuilder builder = new StringBuilder();
-//            builder.append("[");
-//            list.stream().map((obj) -> {
-//                builder.append(obj.toString());
-//                return obj;
-//            }).forEach((_item) -> {
-//                builder.append(",");
-//            });
-//            builder.append("]");
-
             restClient.setPaths(paths);
             restClient.setHttpMethod(HttpMethod.POST);
             restClient.setData(list.toString());
             restClient.configure().setUrlPath().execute();
         } catch (Exception e) {
-            Logger.getLogger(TemperatureSensorBeanController.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, e);
         }
 
     }
@@ -187,7 +177,7 @@ public class TemperatureSensorBeanController {
 //            writer.append(new JSONObject().toString());
             writer.append(list.toString());
         } catch (IOException ex) {
-            Logger.getLogger(TemperatureSensorBeanController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         saveDataThroughRESTService();
@@ -202,7 +192,7 @@ public class TemperatureSensorBeanController {
             value = executor.startExecution().getInputMsg();
 
         } catch (IOException ex) {
-            Logger.getLogger(TemperatureSensorBeanController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, ex);
         }
         return value;
     }

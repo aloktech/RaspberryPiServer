@@ -9,8 +9,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.ejb.Stateless;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,10 +20,16 @@ import lombok.Setter;
  *
  * @author Alok Ranjan
  */
+@Stateless
 public class ProcessExecutor {
-
-    final List<String> command;
+    
+    @Getter
+    private final List<String> command;
     private Process process;
+
+    public ProcessExecutor() {
+        command = new ArrayList<>();
+    }
 
     public ProcessExecutor(List<String> command) {
         Objects.requireNonNull(command, "command cannot be null");

@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,11 +25,9 @@ import java.util.logging.Logger;
 public class ScheduledTask extends TimerTask {
 
     private ProcessExecutor executor;
-    private final int detectionCount = 0;
     public boolean recordingStarted, recordingEnded, canSendMail, createMp4;
-    private final String mp4boxCommand = "MP4Box",
-            mp4SplitCommand = "MP4Box -splits 22000 ", endWithVideo = ".h264";
-    private final AtomicBoolean sendMail = new AtomicBoolean(false);
+    private final String mp4boxCommand = "MP4Box", mp4SplitCommand = "MP4Box -splits 22000 ",
+            endWithVideo = ".h264";
 
     private final TimeUtils timeUtils;
 
@@ -39,18 +35,15 @@ public class ScheduledTask extends TimerTask {
 
     public ScheduledTask() {
         timeUtils = new TimeUtils();
-
         mailService = new SMTPMailService();
     }
 
     @Override
     public void run() {
-
         try {
             creatMp4File();
             splitMp4File("./");
-            mailService.sendMailWithAttachment(String.valueOf(detectionCount), "./", "timeStamp.txt");
-            sendMail.set(true);
+            mailService.sendMailWithAttachment("./");
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(MotionSensorBean.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -78,13 +71,9 @@ public class ScheduledTask extends TimerTask {
             s1 = Integer.parseInt(data1[2]);
             s2 = Integer.parseInt(data2[2]);
             if (h1 == h2) {
-                if (m1 == m2) {
-                    return s1 < s2 ? - 1 : 1;
-                } else {
-                    return m1 < m2 ? - 1 : 1;
-                }
+                return (m1 == m2) ? (s1 - s2) : (m1 - m2);
             } else {
-                return h1 < h2 ? - 1 : 1;
+                return h1 - h2;
             }
         });
         int allItem = names.size();

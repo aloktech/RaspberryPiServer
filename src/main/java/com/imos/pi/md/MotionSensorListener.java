@@ -5,6 +5,7 @@
  */
 package com.imos.pi.md;
 
+import com.imos.pi.utils.SentMailEvent;
 import com.imos.pi.utils.ProcessExecutor;
 import static com.imos.pi.utils.RaspberryPiConstant.KILL;
 import com.imos.pi.utils.TimeUtils;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.enterprise.event.Observes;
 
 /**
  *
@@ -23,21 +25,26 @@ import java.util.logging.Logger;
  */
 public class MotionSensorListener implements GpioPinListenerDigital {
 
-    private final GpioPinDigitalOutput led;
-    private final MotionSensorController motionSensorCtrl;
+    private GpioPinDigitalOutput led;
+    private MotionSensorController motionSensorCtrl;
     private ProcessExecutor executor;
     private boolean recordingStarted;
     private final String endWithVideo = ".h264";
-    final private List<String> captureVideoForTime;
+    private List<String> captureVideoForTime;
     private final int fileNameIndex = 12;
     private final int timeIndex = 14;
 
-    private final TimeUtils timeUtils;
+    private TimeUtils timeUtils;
 
-    public MotionSensorListener(GpioPinDigitalOutput led,MotionSensorController motionSensorCtrl) {
+    public MotionSensorListener() {
+    }
+
+    public MotionSensorListener(GpioPinDigitalOutput led, MotionSensorController motionSensorCtrl) {
         this.led = led;
         this.motionSensorCtrl = motionSensorCtrl;
-
+        
+        timeUtils = new TimeUtils();
+        
         captureVideoForTime = new ArrayList<>();
         captureVideoForTime.add("raspivid");
         captureVideoForTime.add("-vf");
@@ -54,8 +61,6 @@ public class MotionSensorListener implements GpioPinListenerDigital {
         captureVideoForTime.add("");
         captureVideoForTime.add("-t");
         captureVideoForTime.add("");
-        
-        timeUtils = new TimeUtils();
     }
 
     @Override
@@ -92,9 +97,13 @@ public class MotionSensorListener implements GpioPinListenerDigital {
             }
 
             led.low();
-            
+
             motionSensorCtrl.canSendMail.set(true);
         }
+    }
+
+    public void sendMail(@Observes SentMailEvent sentMailEvent) {
+        sentMailEvent.sendMail();
     }
 
     public ProcessExecutor captureVideoForTime(long time) {

@@ -18,4 +18,8 @@ public class RaspberryPiConstant {
     public static final String EQUAL = "=";
     
     public static final String KILL = "kill";
+    
+    public static final String H264 = "h264";
+    public static final String MP4 = "mp4";
+    public static final String TXT = "txt";
 }

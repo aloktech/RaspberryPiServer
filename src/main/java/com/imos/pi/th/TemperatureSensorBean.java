@@ -19,7 +19,7 @@ import javax.inject.Inject;
 public class TemperatureSensorBean {
 
     @Inject
-    private TemperatureSensorBeanController temperatureSensorBeanController;
+    private TempAndHumidSensorController temperatureSensorBeanController;
 
     @Schedule(second = "0", minute = "*/1", hour = "*", persistent = false)
     public void detectSensorSignalInEveryMinutes() {

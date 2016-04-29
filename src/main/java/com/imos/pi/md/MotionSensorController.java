@@ -27,6 +27,8 @@ import lombok.extern.java.Log;
 public class MotionSensorController {
 
     public AtomicBoolean canSendMail;
+    
+    private ScheduledTask task;
 
     public MotionSensorController() {
         canSendMail = new AtomicBoolean();
@@ -77,8 +79,8 @@ public class MotionSensorController {
         if (canSendMail.get()) {
             try {
                 Timer timer = new Timer();
-                ScheduledTask st = new ScheduledTask();
-                timer.schedule(st, 0, 60000);
+                task = new ScheduledTask();
+                timer.schedule(task, 0, 60000);
             } catch (Exception e) {
                 log.severe(e.getMessage());
             } finally {

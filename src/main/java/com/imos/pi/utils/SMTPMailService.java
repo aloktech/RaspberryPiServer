@@ -1,5 +1,6 @@
 package com.imos.pi.utils;
 
+import static com.imos.pi.utils.RaspberryPiConstant.*;
 import java.io.File;
 
 import java.util.Properties;
@@ -11,7 +12,6 @@ import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -27,9 +27,9 @@ import lombok.extern.java.Log;
 @Log
 public class SMTPMailService {
 
-    private TimeUtils timeUtils;
+    private final TimeUtils timeUtils;
 
-    private Properties mailProperties;
+    private final Properties mailProperties;
 
     private final Authenticator authenticator;
 
@@ -40,25 +40,63 @@ public class SMTPMailService {
     private Transport transport;
 
     public SMTPMailService() {
-        
+
         timeUtils = new TimeUtils();
 
-        mailProperties = System.getProperties();
+        mailProperties = SMTPMailUtils.MAIL_PROPERTIES;
 
-        // Setup mail server
-        mailProperties.setProperty("mail.smtp.host", "smtp.gmail.com");
-        mailProperties.setProperty("mail.smtp.ssl.trust", "smtp.gmail.com");
-        mailProperties.setProperty("mail.smtp.user", "RaspberryPi");
-        mailProperties.setProperty("mail.smtp.port", "587");
-        mailProperties.setProperty("mail.smtp.auth", "true");
-        mailProperties.setProperty("mail.smtp.starttls.enable", "true");
+        authenticator = SMTPMailUtils.AUTHENTICATOR;
+    }
 
-        authenticator = new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("alok.r.meher@gmail.com", "gun1anew*point");
+    public boolean sendMailWithAttachment(String videoFilePath) {
+        // Get the default Session object.
+        Session session = Session.getDefaultInstance(mailProperties, authenticator);
+
+        try {
+            folder = new File(videoFilePath);
+            files = folder.listFiles();
+            for (File file : files) {
+                if (file.exists()) {
+                    attachFile(file, session);
+                    String fileName = file.getName();
+                    if (fileName.endsWith(H264)) {
+                        file.delete();
+                    }
+                    if (fileName.endsWith(MP4)) {
+                        file.delete();
+                    }
+                    if (fileName.endsWith(TXT)) {
+                        file.delete();
+                    }
+                }
             }
-        };
+        } catch (Exception mex) {
+            log.severe(mex.getMessage());
+            return false;
+        } finally {
+            if (transport != null) {
+                try {
+                    transport.close();
+                } catch (MessagingException ex) {
+                    log.severe(ex.getMessage());
+                }
+            }
+            for (File file : files) {
+                if (file.exists()) {
+                    String fileName = file.getName();
+                    if (fileName.endsWith(H264)) {
+                        file.delete();
+                    }
+                    if (fileName.endsWith(MP4)) {
+                        file.delete();
+                    }
+                    if (fileName.endsWith(TXT)) {
+                        file.delete();
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     public boolean sendMailWithAttachment(String header, String videoFilePath, String timeFile) {
@@ -70,17 +108,16 @@ public class SMTPMailService {
             folder = new File(videoFilePath);
             files = folder.listFiles();
             for (File file : files) {
-
-                attachFile(file, session);
-
                 if (file.exists()) {
-                    if (file.getName().endsWith("h264")) {
+
+                    attachFile(file, session);
+                    if (file.getName().endsWith(H264)) {
                         file.delete();
                     }
-                    if (file.getName().endsWith("mp4")) {
+                    if (file.getName().endsWith(MP4)) {
                         file.delete();
                     }
-                    if (file.getName().endsWith("txt")) {
+                    if (file.getName().endsWith(TXT)) {
                         file.delete();
                     }
                 }
