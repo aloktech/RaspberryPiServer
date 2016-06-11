@@ -1,0 +1,14 @@
+{
+    "transport": "smtp",
+    "mailSmtpHost": "smtp.gmail.com",
+    "mailSmtpSslTrust": "smtp.gmail.com",
+    "mailSmtpUser": "RaspberryPi",
+    "mailSmtpPort": "587",
+    "mailSmtpAuth": true,
+    "mailSmtpStarttlsEnable": true,
+    "to": "meher.ranjan12@gmail.com",
+    "from": "alok.r.meher@gmail.com",
+    "password": "gun1anew*point",
+    "subject": "",
+    "message": ""
+}

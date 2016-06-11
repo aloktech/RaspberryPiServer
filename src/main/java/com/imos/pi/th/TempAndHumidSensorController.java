@@ -9,6 +9,7 @@ import com.imos.pi.utils.ProcessExecutor;
 import com.imos.pi.utils.HazelcastFactory;
 import com.hazelcast.core.HazelcastInstance;
 import com.imos.pi.utils.HttpMethod;
+import static com.imos.pi.utils.RaspberryPiConstant.*;
 import com.imos.pi.utils.RestClient;
 import com.imos.pi.utils.TimeUtils;
 import java.io.BufferedWriter;
@@ -19,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
+import lombok.Getter;
+import lombok.extern.java.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,18 +32,17 @@ import org.json.JSONObject;
  * @author Alok Ranjan
  */
 @Stateless
+@Log
 public class TempAndHumidSensorController {
 
     private String data;
-    private final String temperatue = "Temp=", celcius = "*", humidity = "Humidity=", percentage = "%",
-            tempStr = "temp", humidStr = "humid", tempHumidMap = "temp:humid-map", separator = "_",
-            timeStr = "time", dataStr = "data";
     private double temp, humid;
-    private final int tempLength = temperatue.length(), humidLength = humidity.length();
+    private final int tempLength = TEMPERATURE.length(), humidLength = HUMIDITY.length();
     private ProcessExecutor executor;
     private final ConcurrentMap<String, String> restMap;
     private ConcurrentMap<String, String> map, tempMap;
     private final HazelcastInstance hazelcastInstance;
+    @Getter
     private final List<String> command;
     private final List<String> paths;
     private final RestClient restClient;
@@ -64,11 +64,11 @@ public class TempAndHumidSensorController {
         restMap = new ConcurrentHashMap<>();
 
         paths = new ArrayList<>();
-        paths.add("basic");
-        paths.add("elastic");
-        paths.add("upload");
-        paths.add("temp-humid-db");
-        paths.add("temp-humid");
+        paths.add(BASIC);
+        paths.add(ELASTIC);
+        paths.add(UPLOAD);
+        paths.add(TEMP_HUMID_DB);
+        paths.add(TEMP_HUMID);
 
         restClient = new RestClient();
     }
@@ -77,23 +77,23 @@ public class TempAndHumidSensorController {
         try {
             data = executeCommand(command);
             String timeWithDate = timeUtils.getCurrentTimeWithDate();
-            temp = Double.parseDouble(data.substring(tempLength, data.indexOf(celcius)));
-            humid = Double.parseDouble(data.substring(data.indexOf(humidity) + humidLength, data.indexOf(percentage)));
+            temp = Double.parseDouble(data.substring(tempLength, data.indexOf(CELCIUS)));
+            humid = Double.parseDouble(data.substring(data.indexOf(HUMIDITY) + humidLength, data.indexOf(PERCENTAGE)));
 
-            map = hazelcastInstance.getMap(tempHumidMap);
+            map = hazelcastInstance.getMap(TEMP_HUMID_MAP);
             JSONObject jsonData = new JSONObject();
-            jsonData.put(tempStr, temp);
-            jsonData.put(humidStr, humid);
+            jsonData.put(TEMP, temp);
+            jsonData.put(HUMID, humid);
             map.put(timeWithDate, jsonData.toString());
-            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.INFO, timeWithDate);
+            log.info(timeWithDate);
         } catch (NumberFormatException | JSONException e) {
-            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, e);
+            log.info(e.getMessage());
         }
 
     }
 
-    public void saveDataThroughRESTService() {
-        map = hazelcastInstance.getMap(tempHumidMap);
+    public void saveDataInElasticSearch() {
+        map = hazelcastInstance.getMap(TEMP_HUMID_MAP);
         tempMap = new ConcurrentHashMap<>(map);
 
         tempMap.keySet().removeAll(restMap.keySet());
@@ -103,8 +103,8 @@ public class TempAndHumidSensorController {
         List<JSONObject> list = new ArrayList<>();
         tempMap.forEach((k, v) -> {
             JSONObject jdata = new JSONObject();
-            jdata.put(timeStr, k);
-            jdata.put(dataStr, new JSONObject(v));
+            jdata.put(TIME, k);
+            jdata.put(DATA, new JSONObject(v));
             allData.put(jdata);
             list.add(jdata);
         });
@@ -115,84 +115,78 @@ public class TempAndHumidSensorController {
             restClient.setData(list.toString());
             restClient.configure().setUrlPath().execute();
         } catch (Exception e) {
-            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, e);
+            log.severe(e.getMessage());
         }
 
     }
 
     public void saveDataAsJSON() {
         String fileName = timeUtils.getCurrentTimeWithDate();
-        map = hazelcastInstance.getMap(tempHumidMap);
+        map = hazelcastInstance.getMap(TEMP_HUMID_MAP);
 
         JSONArray allData = new JSONArray();
         List<JSONObject> list = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             JSONObject jdata = new JSONObject();
-            jdata.put(timeStr, entry.getKey());
-            jdata.put(dataStr, new JSONObject(entry.getValue()));
+            jdata.put(TIME, entry.getKey());
+            jdata.put(DATA, new JSONObject(entry.getValue()));
             allData.put(jdata);
             list.add(jdata);
         }
         list.sort((JSONObject o1, JSONObject o2) -> {
             String val1, val2;
-            val1 = o1.getString(timeStr);
-            val2 = o2.getString(timeStr);
+            val1 = o1.getString(TIME);
+            val2 = o2.getString(TIME);
             String value1[], value2[];
-            value1 = val1.split("_");
-            value2 = val2.split("_");
+            value1 = val1.split(UNDER_SCORE);
+            value2 = val2.split(UNDER_SCORE);
             if (Integer.parseInt(value1[0]) == Integer.parseInt(value2[0])) {
                 if (Integer.parseInt(value1[1]) == Integer.parseInt(value2[1])) {
                     if (Integer.parseInt(value1[2]) == Integer.parseInt(value2[2])) {
                         if (Integer.parseInt(value1[3]) == Integer.parseInt(value2[3])) {
                             if (Integer.parseInt(value1[4]) == Integer.parseInt(value2[4])) {
                                 if (Integer.parseInt(value1[5]) == Integer.parseInt(value2[5])) {
-                                    return Integer.parseInt(value1[6]) < Integer.parseInt(value2[6]) ? -1 : 1;
+                                    return Integer.parseInt(value1[6]) - Integer.parseInt(value2[6]);
                                 } else {
-                                    return Integer.parseInt(value1[5]) < Integer.parseInt(value2[5]) ? -1 : 1;
+                                    return Integer.parseInt(value1[5]) - Integer.parseInt(value2[5]);
                                 }
                             } else {
-                                return Integer.parseInt(value1[4]) < Integer.parseInt(value2[4]) ? -1 : 1;
+                                return Integer.parseInt(value1[4]) - Integer.parseInt(value2[4]);
                             }
                         } else {
-                            return Integer.parseInt(value1[3]) < Integer.parseInt(value2[3]) ? -1 : 1;
+                            return Integer.parseInt(value1[3]) - Integer.parseInt(value2[3]);
                         }
                     } else {
-                        return Integer.parseInt(value1[2]) < Integer.parseInt(value2[2]) ? -1 : 1;
+                        return Integer.parseInt(value1[2]) - Integer.parseInt(value2[2]);
                     }
                 } else {
-                    return Integer.parseInt(value1[1]) < Integer.parseInt(value2[1]) ? -1 : 1;
+                    return Integer.parseInt(value1[1]) - Integer.parseInt(value2[1]);
                 }
             } else {
-                return Integer.parseInt(value1[0]) < Integer.parseInt(value2[0]) ? -1 : 1;
+                return Integer.parseInt(value1[0]) - Integer.parseInt(value2[0]);
             }
         });
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName + ".json"));) {
-
-//            writer.append("[");
-//            for (JSONObject obj : list) {
-//                writer.append(obj.toString());
-//                writer.append(",");
-//            }
-//            writer.append(new JSONObject().toString());
             writer.append(list.toString());
         } catch (IOException ex) {
-            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, ex);
+            log.severe(ex.getMessage());
         }
 
-        saveDataThroughRESTService();
+        saveDataInElasticSearch();
+        
         map.clear();
         restMap.clear();
     }
 
-    private String executeCommand(List<String> command) {
+    public String executeCommand(List<String> command) {
         String value = "";
         try {
             executor = new ProcessExecutor(command);
             value = executor.startExecution().getInputMsg();
 
         } catch (IOException ex) {
-            Logger.getLogger(TempAndHumidSensorController.class.getName()).log(Level.SEVERE, null, ex);
+            log.severe(ex.getMessage());
         }
         return value;
     }

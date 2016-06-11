@@ -5,6 +5,7 @@
  */
 package com.imos.pi.md;
 
+import static com.imos.pi.md.CameraConstant.*;
 import com.imos.pi.utils.SentMailEvent;
 import com.imos.pi.utils.ProcessExecutor;
 import static com.imos.pi.utils.RaspberryPiConstant.KILL;
@@ -15,14 +16,14 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.enterprise.event.Observes;
+import lombok.extern.java.Log;
 
 /**
  *
  * @author Alok
  */
+@Log
 public class MotionSensorListener implements GpioPinListenerDigital {
 
     private GpioPinDigitalOutput led;
@@ -42,9 +43,9 @@ public class MotionSensorListener implements GpioPinListenerDigital {
     public MotionSensorListener(GpioPinDigitalOutput led, MotionSensorController motionSensorCtrl) {
         this.led = led;
         this.motionSensorCtrl = motionSensorCtrl;
-        
+
         timeUtils = new TimeUtils();
-        
+
         captureVideoForTime = new ArrayList<>();
         captureVideoForTime.add("raspivid");
         captureVideoForTime.add("-vf");
@@ -65,40 +66,42 @@ public class MotionSensorListener implements GpioPinListenerDigital {
 
     @Override
     public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-        if (event.getState().isHigh()) {
-            led.high();
-            if (!recordingStarted) {
-                recordingStarted = true;
-                captureVideoForTime(600000);
+        if (motionSensorCtrl.cameraEnable.get()) {
+            if (event.getState().isHigh()) {
+                led.high();
+                if (!recordingStarted) {
+                    recordingStarted = true;
+                    captureVideoForTime(600000);
+                }
             }
-        }
 
-        if (event.getState().isLow() && recordingStarted) {
-            recordingStarted = false;
-            String value;
+            if (event.getState().isLow() && recordingStarted) {
+                recordingStarted = false;
+                String value;
 
-            List<String> command = new ArrayList<>();
-            command.add("pgrep");
-            command.add("raspivid");
-            value = executeCommand(command);
+                List<String> command = new ArrayList<>();
+                command.add(PGREP);
+                command.add(RASPIVID);
+                value = executeCommand(command);
 
-            if (value.contains(" ")) {
-                for (String pidValuel : value.split(" ")) {
+                if (value.contains(BLANK_SPACE)) {
+                    for (String pidValuel : value.split(BLANK_SPACE)) {
+                        command = new ArrayList<>();
+                        command.add(KILL);
+                        command.add(pidValuel);
+                        executeCommand(command);
+                    }
+                } else {
                     command = new ArrayList<>();
                     command.add(KILL);
-                    command.add(pidValuel);
+                    command.add(value);
                     executeCommand(command);
                 }
-            } else {
-                command = new ArrayList<>();
-                command.add(KILL);
-                command.add(value);
-                executeCommand(command);
+
+                led.low();
+
+                motionSensorCtrl.canSendMail.set(true);
             }
-
-            led.low();
-
-            motionSensorCtrl.canSendMail.set(true);
         }
     }
 
@@ -120,7 +123,7 @@ public class MotionSensorListener implements GpioPinListenerDigital {
             executor = new ProcessExecutor(command);
             value = executor.startExecution().getInputMsg().trim();
         } catch (IOException ex) {
-            Logger.getLogger(MotionSensorBean.class.getName()).log(Level.SEVERE, null, ex);
+            log.severe(ex.getMessage());
         }
         return value;
     }

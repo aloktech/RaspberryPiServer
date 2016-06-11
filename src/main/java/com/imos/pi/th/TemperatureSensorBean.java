@@ -28,7 +28,7 @@ public class TemperatureSensorBean {
 
     @Schedule(second = "0", minute = "*/30", hour = "*", persistent = false)
     public void saveDataThroughRESTServiceInEveryThirthMinutes() {
-        temperatureSensorBeanController.saveDataThroughRESTService();
+        temperatureSensorBeanController.saveDataInElasticSearch();
     }
     
     @Schedule(second = "0", minute = "0", hour = "0", persistent = false)

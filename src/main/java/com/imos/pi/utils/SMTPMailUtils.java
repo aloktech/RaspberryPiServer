@@ -1,6 +1,6 @@
 package com.imos.pi.utils;
 
-
+import static com.imos.pi.utils.JSONConstant.*;
 import java.util.Properties;
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
@@ -16,17 +16,17 @@ public class SMTPMailUtils {
     public static final Properties MAIL_PROPERTIES;
 
     public static final Authenticator AUTHENTICATOR;
-    
+
     static {
         MAIL_PROPERTIES = System.getProperties();
 
         // Setup mail server
-        MAIL_PROPERTIES.setProperty("mail.smtp.host", "smtp.gmail.com");
-        MAIL_PROPERTIES.setProperty("mail.smtp.ssl.trust", "smtp.gmail.com");
-        MAIL_PROPERTIES.setProperty("mail.smtp.user", "RaspberryPi");
-        MAIL_PROPERTIES.setProperty("mail.smtp.port", "587");
-        MAIL_PROPERTIES.setProperty("mail.smtp.auth", "true");
-        MAIL_PROPERTIES.setProperty("mail.smtp.starttls.enable", "true");
+        MAIL_PROPERTIES.setProperty(MAIL_SMTP_HOST, "smtp.gmail.com");
+        MAIL_PROPERTIES.setProperty(MAIL_SMTP_SSL_TRUST, "smtp.gmail.com");
+        MAIL_PROPERTIES.setProperty(MAIL_SMTP_USER, "RaspberryPi");
+        MAIL_PROPERTIES.setProperty(MAIL_SMTP_PORT, "587");
+        MAIL_PROPERTIES.setProperty(MAIL_SMTP_AUTH, "true");
+        MAIL_PROPERTIES.setProperty(MAIL_SMTP_START_TLS_ENABLE, "true");
 
         AUTHENTICATOR = new Authenticator() {
             @Override

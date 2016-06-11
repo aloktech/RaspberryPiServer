@@ -16,6 +16,8 @@ import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ejb.Schedule;
 import javax.ejb.Stateless;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.java.Log;
 
 /**
@@ -26,12 +28,14 @@ import lombok.extern.java.Log;
 @Log
 public class MotionSensorController {
 
-    public AtomicBoolean canSendMail;
+    @Setter @Getter
+    public AtomicBoolean canSendMail, cameraEnable;
     
     private ScheduledTask task;
 
     public MotionSensorController() {
-        canSendMail = new AtomicBoolean();
+        canSendMail = new AtomicBoolean(false);
+        cameraEnable = new AtomicBoolean(true);
     }
 
     public void execute() {
