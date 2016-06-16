@@ -18,7 +18,7 @@ import lombok.extern.java.Log;
  */
 @Stateless
 @Log
-@Path("")
+@Path("rasp")
 public class TempAndHumidSensorRestClient {
     @Inject
     private TempAndHumidSensorController controller;

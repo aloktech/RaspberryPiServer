@@ -33,6 +33,7 @@ public class RaspberryPiConstant {
     public static final String TEMP_HUMID_DB = "temp-humid-db";
     public static final String TEMP_HUMID = "temp-humid";
     public static final String TEMP_HUMID_MAP = "temp:humid-map";
+    public static final String TEMP_HUMID_CURRENT = "temp:humid-current";
     public static final String TEMP = "temp";
     public static final String HUMID = "humid";
     public static final String TEMPERATURE = "Temp=";

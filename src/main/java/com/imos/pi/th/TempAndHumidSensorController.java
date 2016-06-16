@@ -40,7 +40,7 @@ public class TempAndHumidSensorController {
     private final int tempLength = TEMPERATURE.length(), humidLength = HUMIDITY.length();
     private ProcessExecutor executor;
     private final ConcurrentMap<String, String> restMap;
-    private ConcurrentMap<String, String> map, tempMap;
+    private ConcurrentMap<String, String> map, tempMap, current;
     private final HazelcastInstance hazelcastInstance;
     @Getter
     private final List<String> command;
@@ -81,10 +81,13 @@ public class TempAndHumidSensorController {
             humid = Double.parseDouble(data.substring(data.indexOf(HUMIDITY) + humidLength, data.indexOf(PERCENTAGE)));
 
             map = hazelcastInstance.getMap(TEMP_HUMID_MAP);
+            current = hazelcastInstance.getMap(TEMP_HUMID_CURRENT);
             JSONObject jsonData = new JSONObject();
             jsonData.put(TEMP, temp);
             jsonData.put(HUMID, humid);
             map.put(timeWithDate, jsonData.toString());
+            
+            current.put("current", data);
             log.info(timeWithDate);
         } catch (NumberFormatException | JSONException e) {
             log.info(e.getMessage());
@@ -166,15 +169,15 @@ public class TempAndHumidSensorController {
                 return Integer.parseInt(value1[0]) - Integer.parseInt(value2[0]);
             }
         });
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName + ".json"));) {
+        String baseFolder = "/home/pi/NetBeansProjects/RaspberryPiServer/";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(baseFolder + fileName + ".json"));) {
             writer.append(list.toString());
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
 
         saveDataInElasticSearch();
-        
+
         map.clear();
         restMap.clear();
     }

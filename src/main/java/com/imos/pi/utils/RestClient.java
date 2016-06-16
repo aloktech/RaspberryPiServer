@@ -76,8 +76,9 @@ public class RestClient {
     }
 
     private URI getBaseURI() {
-        if (baseUrl == null) {
-            baseUrl = "http://192.168.1.33:8090/BasicRESTService/";
+        baseUrl = ServerManagement.URL;
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            baseUrl = "http://192.168.1.34:8090/BasicRESTService/";
         }
         return UriBuilder.fromUri(baseUrl).build();
     }
