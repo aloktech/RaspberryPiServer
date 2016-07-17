@@ -20,6 +20,9 @@ public class TemperatureSensorBean {
 
     @Inject
     private TempAndHumidSensorController temperatureSensorBeanController;
+    
+    @Inject
+    private RaspberryPiWebSocketController raspberryPiWebSocketController;
 
     @Schedule(second = "0", minute = "*/1", hour = "*", persistent = false)
     public void detectSensorSignalInEveryMinutes() {
@@ -35,4 +38,9 @@ public class TemperatureSensorBean {
     public void saveDataAsJSONIn24Hours() {
         temperatureSensorBeanController.saveDataAsJSON();
     }
+    
+//    @Schedule(second = "0", minute = "*/10", hour = "*", persistent = false)
+//    public void updateCurrentTempHumidEveryTenMinutes() {
+//        raspberryPiWebSocketController.updateCurrentTempHumid();
+//    }
 }

@@ -34,43 +34,57 @@ public class ServerManagement {
     private static final String URL_III = "http://192.168.1.34:8090/BasicRESTService/";
     private static final String URL_IV = "http://192.168.1.35:8090/BasicRESTService/";
 
-    public static volatile String URL;
+    public static volatile String URL = URL_III;
 
-    @Schedule(second = "0", minute = "*/29", hour = "*", persistent = false)
-    void checkServerUrl() {
-        try {
-            setCurrentUrl(URL_I);
-            setCurrentUrl(URL_II);
-            setCurrentUrl(URL_III);
-            setCurrentUrl(URL_IV);
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void setCurrentUrl(String url) throws InterruptedException, ExecutionException {
-        try {
-            CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
-                try {
-                    return (getResponseCode(url) == 200) ? url : "";
-                } catch (IOException ex) {
-                    Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return "";
-            }, EXECUTOR);
-            if (!completableFuture.get().isEmpty()) {
-                URL = url;
-            }
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private static int getResponseCode(String urlString) throws MalformedURLException, IOException {
-        URL u = new URL(urlString);
-        HttpURLConnection huc = (HttpURLConnection) u.openConnection();
-        huc.setRequestMethod("GET");
-        huc.connect();
-        return huc.getResponseCode();
-    }
+//    @Schedule(second = "0", minute = "*/20", hour = "*", persistent = false)
+//    void checkServerUrl() {
+//        try {
+//            setCurrentUrl(URL_I);
+//        } catch (InterruptedException | ExecutionException ex) {
+//            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        try {
+//            setCurrentUrl(URL_II);
+//        } catch (InterruptedException | ExecutionException ex) {
+//            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        try {
+//            setCurrentUrl(URL_III);
+//        } catch (InterruptedException | ExecutionException ex) {
+//            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        try {
+//            setCurrentUrl(URL_IV);
+//        } catch (InterruptedException | ExecutionException ex) {
+//            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
+//
+//    private void setCurrentUrl(String url) throws InterruptedException, ExecutionException {
+//        CompletableFuture.supplyAsync(() -> {
+//            return (getResponseCode(url) == 200) ? url : "";
+//        }, EXECUTOR).whenComplete((a, b) -> {
+//            URL = (a == null || a.trim().isEmpty()) ? "" : a;
+//        });
+//    }
+//
+//    private static int getResponseCode(String urlString) {
+//        HttpURLConnection huc = null;
+//        try {
+//            URL u = new URL(urlString);
+//            huc = (HttpURLConnection) u.openConnection();
+//            huc.setRequestMethod("GET");
+//            huc.connect();
+//            return huc.getResponseCode();
+//        } catch (MalformedURLException ex) {
+//            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IOException ex) {
+//            Logger.getLogger(ServerManagement.class.getName()).log(Level.SEVERE, null, ex);
+//        } finally {
+//            if (huc != null) {
+//                huc.disconnect();
+//            }
+//        }
+//        return 0;
+//    }
 }

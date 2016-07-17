@@ -38,4 +38,5 @@ public class RaspberryPiConstant {
     public static final String HUMID = "humid";
     public static final String TEMPERATURE = "Temp=";
     public static final String HUMIDITY = "Humidity=";
+    public static final String CURRENT = "current";
 }

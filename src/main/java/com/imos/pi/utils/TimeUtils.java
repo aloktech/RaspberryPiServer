@@ -49,6 +49,24 @@ public class TimeUtils {
 
         return builder.toString();
     }
+    
+    public String getYesterdayTimeWithDate() {
+        StringBuilder builder = new StringBuilder();
+        INSTANCE.setTimeInMillis(System.currentTimeMillis());
+        builder.append(INSTANCE.get(Calendar.DAY_OF_MONTH) - 1);
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.MONTH) + 1);
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.YEAR));
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.HOUR_OF_DAY));
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.MINUTE));
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.SECOND));
+
+        return builder.toString();
+    }
 
     public String getCurrentTimeWithDate() {
         StringBuilder builder = new StringBuilder();

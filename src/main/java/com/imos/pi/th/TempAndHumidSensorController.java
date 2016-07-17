@@ -87,7 +87,7 @@ public class TempAndHumidSensorController {
             jsonData.put(HUMID, humid);
             map.put(timeWithDate, jsonData.toString());
             
-            current.put("current", data);
+            current.put(CURRENT, data);
             log.info(timeWithDate);
         } catch (NumberFormatException | JSONException e) {
             log.info(e.getMessage());
@@ -124,7 +124,7 @@ public class TempAndHumidSensorController {
     }
 
     public void saveDataAsJSON() {
-        String fileName = timeUtils.getCurrentTimeWithDate();
+        String fileName = timeUtils.getYesterdayTimeWithDate();
         map = hazelcastInstance.getMap(TEMP_HUMID_MAP);
 
         JSONArray allData = new JSONArray();

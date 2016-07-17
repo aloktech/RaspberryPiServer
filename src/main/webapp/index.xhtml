@@ -1,13 +1,75 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html">
     <h:head>
-        <title>Facelet Title</title>
+        <title>Raspberry Pi</title>
     </h:head>
     <h:body>
-        Hello from Facelets
-        <br />
+        <p:tabView>
+            <p:tab title="Alarm">
+                <h:panelGrid columns="2">
+                    <h:panelGroup >
+                        <p:outputLabel for="alarms" value="List of Alarms : " />
+                        <p:selectOneListbox id="alarms" value="#{alarmAction.selectedAlarmBean}">
+                            <f:selectItems value="#{alarmAction.allAlarms}" var="alarm" itemLabel="#{alarm.alarmName}" itemValue="#{alarm.alarmName}"/>
+                        </p:selectOneListbox>
+                    </h:panelGroup>
+                    
+                    <h:panelGroup>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel for="time" value="Enable" />
+                            <p:inputSwitch value="#{alarmAction.alarmBean.enable}"/>
+                        </h:panelGrid>
+
+                        <h:panelGrid columns="1">
+                            <h:panelGrid columns="2">
+                                <p:outputLabel value="Alarm Name : "/>
+                                <p:outputLabel value="#{alarmAction.alarmBean.alarmName} "/>
+                            </h:panelGrid>
+                            <h:panelGrid columns="2">
+                                <p:outputLabel value="Song Name : "/>
+                                <p:outputLabel value="#{alarmAction.alarmBean.song.songName} "/>
+                            </h:panelGrid>
+                            <h:panelGrid columns="1">
+                                <p:commandButton value="Select" actionListener="#{alarmAction.selectFile}"/>
+                                <p:fileUpload label="Upload" value="#{alarmAction.file}" mode="simple" skinSimple="true" allowTypes="mp3|aac"/>
+                                <p:commandButton value="Download" actionListener="#{alarmAction.downloadFile}"/>
+                            </h:panelGrid>
+                        </h:panelGrid>
+                        <p:panelGrid columns="2">
+                            <p:commandButton value="Play"/>
+                            <p:commandButton value="Stop"/>
+                        </p:panelGrid>
+                        <h:panelGrid columns="4">
+                            <p:outputLabel value="Occurence : "/>
+                            <p:selectOneRadio value="#{alarmAction.alarmBean.alarmType}">
+                                <f:selectItem itemLabel="Daily" itemValue="daily" />
+                                <f:selectItem itemLabel="Selective" itemValue="selective"/>
+                            </p:selectOneRadio>
+                        </h:panelGrid>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel for="time" value="Date" />
+                            <p:calendar id="date" value="#{alarmAction.alarmBean.dateAndTimeToPlay}"/>
+                        </h:panelGrid>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel for="time" value="Time:" />
+                            <p:calendar id="time"  pattern="HH:mm" timeOnly="true"  value="#{alarmAction.alarmBean.hourAndMinute}"/>
+                        </h:panelGrid>
+
+                        <p:panelGrid columns="3">
+                            <p:commandButton value="Add" actionListener="#{alarmAction.addAlarm}" update="alarms"/>
+                            <p:commandButton value="Edit" actionListener="#{alarmAction.editAlarm}"/>
+                            <p:commandButton value="Delete" actionListener="#{alarmAction.deleteAlarm}"/>
+                            <p:commandButton value="Reset" actionListener="#{alarmAction.resetAlarm}"/>
+                        </p:panelGrid>
+                    </h:panelGroup>
+
+                </h:panelGrid>
+            </p:tab>
+        </p:tabView>
     </h:body>
 </html>
 

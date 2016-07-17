@@ -119,9 +119,9 @@ public class ScheduledTask extends TimerTask {
         }
     }
 
-    public String detectorTheSensor(List<String> command) {
-        return executeCommand(command);
-    }
+//    public String detectorTheSensor(List<String> command) {
+//        return executeCommand(command);
+//    }
 
     private String createFileName() {
         StringBuilder fileName = new StringBuilder();
@@ -131,16 +131,16 @@ public class ScheduledTask extends TimerTask {
         return fileName.toString();
     }
 
-    private String executeCommand(List<String> command) {
-        String value = "";
-        try {
-            executor = new ProcessExecutor(command);
-            value = executor.startExecution().getInputMsg();
-
-        } catch (IOException ex) {
-            Logger.getLogger(ScheduledTask.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return value;
-    }
+//    private String executeCommand(List<String> command) {
+//        String value = "";
+//        try {
+//            executor = new ProcessExecutor(command);
+//            value = executor.startExecution().getInputMsg();
+//
+//        } catch (IOException ex) {
+//            Logger.getLogger(ScheduledTask.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        return value;
+//    }
 
 }
