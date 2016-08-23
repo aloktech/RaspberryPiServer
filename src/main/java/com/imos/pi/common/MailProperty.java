@@ -1,4 +1,4 @@
-package com.imos.pi.utils;
+package com.imos.pi.common;
 
 import lombok.Getter;
 import lombok.Setter;

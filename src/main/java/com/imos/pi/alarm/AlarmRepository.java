@@ -5,16 +5,15 @@
  */
 package com.imos.pi.alarm;
 
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.Getter;
 import lombok.extern.java.Log;
 
@@ -32,20 +31,50 @@ public class AlarmRepository {
 
     private AlarmRepository() {
         alarms = new HashSet<>();
+
+        populateRepository();
+    }
+
+    private void populateRepository() {
         SongBean songBean = new SongBean();
         songBean.setId(0);
-        songBean.setSongName("Vishnu.mp3");
+        songBean.setSongName("Vishnu Sahasranamam Stotram-M S Subbulakshmi.mp3");
         songBean.setSongPath("/home/pi/Music/Vishnu Sahasranamam Stotram-M S Subbulakshmi.mp3");
 
         AlarmBean alarmBean = new AlarmBean();
         alarmBean.setSong(songBean);
-        alarmBean.setAlarmType(AlarmType.DAILY);
+        alarmBean.setAlarmName("");
+        alarmBean.setAlarmType(AlarmType.RECURRING);
+        alarmBean.setIncrementByDays(1);
         alarmBean.setEnable(true);
         Calendar calendar = GregorianCalendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 6);
-        calendar.set(Calendar.MINUTE, 50);
-        alarmBean.setHourAndMinute(calendar.getTime());
-        alarmBean.setId(0);
+        calendar.set(Calendar.MINUTE, 45);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        alarmBean.setDateAndTime(calendar.getTime());
+        alarmBean.setId(1);
+
+        alarms.add(alarmBean);
+
+        songBean = new SongBean();
+        songBean.setId(1);
+        songBean.setSongName("Defrost_the_freeze.mp3");
+        songBean.setSongPath("/home/pi/Music/Defrost_the_freeze.mp3");
+
+        alarmBean = new AlarmBean();
+        alarmBean.setSong(songBean);
+        alarmBean.setAlarmType(AlarmType.RECURRING);
+        alarmBean.setEnable(true);
+        alarmBean.setAlarmName("");
+        alarmBean.setIncrementByDays(3);
+        calendar = GregorianCalendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 7);
+        calendar.set(Calendar.MINUTE, 55);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        alarmBean.setDateAndTime(calendar.getTime());
+        alarmBean.setId(2);
 
         alarms.add(alarmBean);
     }
@@ -65,8 +94,7 @@ public class AlarmRepository {
             try {
                 File file = new File(alarmBean.getSong().getSongPath());
                 if (!file.exists()) {
-                    FileOutputStream writer = new FileOutputStream(alarmBean.getSong().getSongPath());
-                    writer.write(alarmBean.getSong().getSongData());
+                    Files.write(alarmBean.getSong().getSongData(), new File(alarmBean.getSong().getSongPath()));
                     log.log(Level.INFO, "{0} is added", alarmBean.getAlarmName());
                 }
             } catch (IOException ex) {
@@ -87,7 +115,7 @@ public class AlarmRepository {
         log.log(Level.INFO, "{0} is deleted", ab.getAlarmName());
     }
 
-    public void editAlarm(AlarmBean alarmBean) {
+    public void updateAlarm(AlarmBean alarmBean) {
         alarms.add(alarmBean);
         log.log(Level.INFO, "{0} is edited", alarmBean.getAlarmName());
     }

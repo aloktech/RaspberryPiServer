@@ -1,0 +1,31 @@
+<hazelcast xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd"
+           xmlns="http://www.hazelcast.com/schema/config">
+
+    <properties>
+        <property name="hazelcast.discovery.enabled">true</property>
+    </properties>
+    
+    
+    <network>
+        <map name="A"/>
+        <properties>
+            <property name="hazelcast.discovery.enabled">true</property>
+        </properties>
+        <port auto-increment="true">5704</port>
+        <outbound-ports>
+            <ports>30000-31000</ports>
+        </outbound-ports>
+        <join>
+            <multicast enabled="true"/>
+            <!--<multicast enabled="false"/>-->
+            <tcp-ip enabled="false" />
+            <aws enabled="false"/>
+            <discovery-strategies>
+                <discovery-strategy enabled="true" class="com.hazelcast.spi.discovery.multicast.MulticastDiscoveryStrategy">
+                </discovery-strategy>
+            </discovery-strategies>
+        </join>
+    </network>
+</hazelcast>

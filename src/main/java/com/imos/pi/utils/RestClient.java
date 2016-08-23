@@ -1,5 +1,6 @@
 package com.imos.pi.utils;
 
+import com.imos.pi.common.HttpMethod;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,9 +77,8 @@ public class RestClient {
     }
 
     private URI getBaseURI() {
-        baseUrl = ServerManagement.URL;
         if (baseUrl == null || baseUrl.isEmpty()) {
-            baseUrl = "http://192.168.1.34:8090/BasicRESTService/";
+            baseUrl = "http://localhost:8097/";
         }
         return UriBuilder.fromUri(baseUrl).build();
     }

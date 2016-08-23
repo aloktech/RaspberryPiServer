@@ -3,17 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.imos.pi.th;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.websocket.ClientEndpoint;
+package com.imos.pi.common;
 
 /**
  *
  * @author Alok
  */
-@ApplicationScoped
-@ClientEndpoint
-public class RaspberryPiWebSocketClient {
-    
+public enum HttpMethod {
+    GET, POST, PUT, DELETE;
 }

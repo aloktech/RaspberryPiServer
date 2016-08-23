@@ -5,6 +5,7 @@
  */
 package com.imos.pi.utils;
 
+import com.imos.pi.service.SMTPMailService;
 import javax.ejb.Stateless;
 
 /**

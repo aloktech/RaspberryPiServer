@@ -8,7 +8,7 @@ package com.imos.pi.md;
 import static com.imos.pi.md.CameraConstant.*;
 import com.imos.pi.utils.SentMailEvent;
 import com.imos.pi.utils.ProcessExecutor;
-import static com.imos.pi.utils.RaspberryPiConstant.KILL;
+import static com.imos.pi.common.RaspberryPiConstant.KILL;
 import com.imos.pi.utils.TimeUtils;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;

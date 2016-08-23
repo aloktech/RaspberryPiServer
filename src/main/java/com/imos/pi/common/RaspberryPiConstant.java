@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.imos.pi.utils;
+package com.imos.pi.common;
 
 /**
  *
@@ -39,4 +39,7 @@ public class RaspberryPiConstant {
     public static final String TEMPERATURE = "Temp=";
     public static final String HUMIDITY = "Humidity=";
     public static final String CURRENT = "current";
+    
+    public static final String BASE_DIR = "/home/pi/";
+    public static final String MUSIC_DIR = "/home/pi/Music/";
 }

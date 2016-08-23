@@ -3,12 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.imos.pi.utils;
+package com.imos.pi.ui.utils;
 
 /**
  *
- * @author Alok
+ * @author Pintu
  */
-public enum HttpMethod {
-    GET, POST, PUT, DELETE;
+public enum AlarmType {
+    
+    ONE_TIME,
+    DAILY,
+    HOUR_WISE_RECURSIVE,
+    MINUTE_WISE_RECURSIVE,
+    DAY_WISE_RECURSIVE;
 }

@@ -6,8 +6,8 @@
 package com.imos.pi.md;
 
 import com.imos.pi.utils.ProcessExecutor;
-import static com.imos.pi.utils.RaspberryPiConstant.UNDER_SCORE;
-import com.imos.pi.utils.SMTPMailService;
+import static com.imos.pi.common.RaspberryPiConstant.UNDER_SCORE;
+import com.imos.pi.service.SMTPMailService;
 import com.imos.pi.utils.TimeUtils;
 import java.io.File;
 import java.io.IOException;
@@ -119,10 +119,6 @@ public class ScheduledTask extends TimerTask {
         }
     }
 
-//    public String detectorTheSensor(List<String> command) {
-//        return executeCommand(command);
-//    }
-
     private String createFileName() {
         StringBuilder fileName = new StringBuilder();
         fileName.append(timeUtils.getCurrentTime());
@@ -130,17 +126,5 @@ public class ScheduledTask extends TimerTask {
 
         return fileName.toString();
     }
-
-//    private String executeCommand(List<String> command) {
-//        String value = "";
-//        try {
-//            executor = new ProcessExecutor(command);
-//            value = executor.startExecution().getInputMsg();
-//
-//        } catch (IOException ex) {
-//            Logger.getLogger(ScheduledTask.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        return value;
-//    }
 
 }

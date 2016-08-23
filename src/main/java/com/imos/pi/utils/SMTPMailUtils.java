@@ -1,6 +1,6 @@
 package com.imos.pi.utils;
 
-import static com.imos.pi.utils.JSONConstant.*;
+import static com.imos.pi.common.JSONConstant.*;
 import java.util.Properties;
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;

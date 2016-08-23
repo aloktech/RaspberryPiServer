@@ -3,14 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.imos.pi.alarm;
+package com.imos.pi.ui.utils;
 
 /**
  *
- * @author Alok
+ * @author Pintu
  */
-public enum AlarmType {
-    DAILY,
-    SELECTIVE,
-    RECURRING;
+public enum RecursionType {
+    
+    NONE,
+    DAY_WISE,
+    HOUR_WISE,
+    MINUTE_WISE;
 }

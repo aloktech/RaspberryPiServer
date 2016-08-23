@@ -9,12 +9,12 @@ import com.imos.pi.common.ScheduledExecution;
 import com.imos.pi.utils.ProcessExecutor;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import lombok.Setter;
+import lombok.Getter;
 
 /**
  *
@@ -23,22 +23,37 @@ import lombok.Setter;
 public class ScheduledTask extends TimerTask implements ScheduledExecution {
 
     private ProcessExecutor executor;
-    @Setter
-    private AlarmBean alarm;
+    @Getter
+    private final AlarmBean alarm;
+    private final Timer timer;
+
+    public ScheduledTask(Timer timer, AlarmBean alarm) {
+        this.timer = timer;
+        this.alarm = alarm;
+        alarm.setActive(true);
+        alarm.setExecuted(false);
+        AlarmRepository.getInstance().updateAlarm(alarm);
+    }
 
     @Override
     public void run() {
         playMusic();
+        cancel();
+        timer.cancel();
+        alarm.setExecuted(true);
+        alarm.setActive(false);
+        AlarmRepository.getInstance().updateAlarm(alarm);
     }
 
     private void playMusic() {
         List<String> cmd = new ArrayList<>();
-        cmd.add("sudo");
+        cmd.add("/usr/bin/sudo");
         cmd.add("omxplayer");
+        cmd.add("-o");
+        cmd.add("local");
         cmd.add(alarm.getSong().getSongPath());
-        
+
         executeCommand(cmd);
-        cancel();
     }
 
     @Override
@@ -47,7 +62,6 @@ public class ScheduledTask extends TimerTask implements ScheduledExecution {
         try {
             executor = new ProcessExecutor(command);
             value = executor.startExecution().getInputMsg();
-
         } catch (IOException ex) {
             Logger.getLogger(com.imos.pi.md.ScheduledTask.class.getName()).log(Level.SEVERE, null, ex);
         }

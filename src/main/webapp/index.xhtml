@@ -1,74 +1,142 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:h="http://xmlns.jcp.org/jsf/html">
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
     <h:head>
-        <title>Raspberry Pi</title>
+        <title>Raspberry Pi Dashboard</title>
     </h:head>
     <h:body>
+        <p:growl id="messages" showDetail="true" />
         <p:tabView>
-            <p:tab title="Alarm">
-                <h:panelGrid columns="2">
-                    <h:panelGroup >
-                        <p:outputLabel for="alarms" value="List of Alarms : " />
-                        <p:selectOneListbox id="alarms" value="#{alarmAction.selectedAlarmBean}">
-                            <f:selectItems value="#{alarmAction.allAlarms}" var="alarm" itemLabel="#{alarm.alarmName}" itemValue="#{alarm.alarmName}"/>
-                        </p:selectOneListbox>
-                    </h:panelGroup>
-                    
-                    <h:panelGroup>
-                        <h:panelGrid columns="2">
-                            <p:outputLabel for="time" value="Enable" />
-                            <p:inputSwitch value="#{alarmAction.alarmBean.enable}"/>
-                        </h:panelGrid>
-
-                        <h:panelGrid columns="1">
-                            <h:panelGrid columns="2">
-                                <p:outputLabel value="Alarm Name : "/>
-                                <p:outputLabel value="#{alarmAction.alarmBean.alarmName} "/>
-                            </h:panelGrid>
-                            <h:panelGrid columns="2">
-                                <p:outputLabel value="Song Name : "/>
-                                <p:outputLabel value="#{alarmAction.alarmBean.song.songName} "/>
-                            </h:panelGrid>
-                            <h:panelGrid columns="1">
-                                <p:commandButton value="Select" actionListener="#{alarmAction.selectFile}"/>
-                                <p:fileUpload label="Upload" value="#{alarmAction.file}" mode="simple" skinSimple="true" allowTypes="mp3|aac"/>
-                                <p:commandButton value="Download" actionListener="#{alarmAction.downloadFile}"/>
-                            </h:panelGrid>
-                        </h:panelGrid>
-                        <p:panelGrid columns="2">
-                            <p:commandButton value="Play"/>
-                            <p:commandButton value="Stop"/>
+            <p:tab title="Temp And Humid">
+                <h:form enctype="multipart/form-data">
+                    <p:panelGrid columns="3" style="margin-bottom: 10px">
+                        <p:panelGrid columns="2" >
+                            <p:outputLabel value="Date"/>
+                            <p:calendar value="#{graph.date}" pattern="dd-MMM-yy"/>
+                            <p:outputLabel id="timeInterval" value="Time interval %#{graph.timeIntervalStr}" />
+                            <p:slider for="timeInterval" rendered="true" />
+                            <p:outputLabel value=""></p:outputLabel>
+                            <p:commandButton value="Show Graph" actionListener="#{graph.uploadChart}" update="tempHumidChart, tempHumidTable,messages"/>
                         </p:panelGrid>
-                        <h:panelGrid columns="4">
-                            <p:outputLabel value="Occurence : "/>
-                            <p:selectOneRadio value="#{alarmAction.alarmBean.alarmType}">
-                                <f:selectItem itemLabel="Daily" itemValue="daily" />
-                                <f:selectItem itemLabel="Selective" itemValue="selective"/>
-                            </p:selectOneRadio>
-                        </h:panelGrid>
-                        <h:panelGrid columns="2">
-                            <p:outputLabel for="time" value="Date" />
-                            <p:calendar id="date" value="#{alarmAction.alarmBean.dateAndTimeToPlay}"/>
-                        </h:panelGrid>
-                        <h:panelGrid columns="2">
-                            <p:outputLabel for="time" value="Time:" />
-                            <p:calendar id="time"  pattern="HH:mm" timeOnly="true"  value="#{alarmAction.alarmBean.hourAndMinute}"/>
-                        </h:panelGrid>
+                        <p:panelGrid columns="5" id="tempHumidTable">
+                            <p:outputLabel value=""></p:outputLabel>
+                            <p:outputLabel value="Curr"></p:outputLabel>
+                            <p:outputLabel value="Max"></p:outputLabel>
+                            <p:outputLabel value="Min"></p:outputLabel>
+                            <p:outputLabel value="Avg"></p:outputLabel>
 
-                        <p:panelGrid columns="3">
-                            <p:commandButton value="Add" actionListener="#{alarmAction.addAlarm}" update="alarms"/>
-                            <p:commandButton value="Edit" actionListener="#{alarmAction.editAlarm}"/>
-                            <p:commandButton value="Delete" actionListener="#{alarmAction.deleteAlarm}"/>
-                            <p:commandButton value="Reset" actionListener="#{alarmAction.resetAlarm}"/>
+                            <p:outputLabel value="Temperature"></p:outputLabel>
+                            <p:outputLabel value="#{graph.currTemp}"></p:outputLabel>
+                            <p:outputLabel value="#{graph.maxTemp}"></p:outputLabel>
+                            <p:outputLabel value="#{graph.minTemp}"></p:outputLabel>
+                            <p:outputLabel value="#{graph.avgTemp}"></p:outputLabel>
+
+                            <p:outputLabel value="Humidity"></p:outputLabel>
+                            <p:outputLabel value="#{graph.currHumid}"></p:outputLabel>
+                            <p:outputLabel value="#{graph.maxHumid}"></p:outputLabel>
+                            <p:outputLabel value="#{graph.minHumid}"></p:outputLabel>
+                            <p:outputLabel value="#{graph.avgHumid}"></p:outputLabel>
                         </p:panelGrid>
-                    </h:panelGroup>
+                        <p:panelGrid columns="1">
+                            <p:outputLabel value="Upload a json file : "/>
+                            <p:fileUpload mode="advanced" fileUploadListener="#{graph.uploadFile}" allowTypes="/(\.|\/)(json)$/" multiple="true" fileLimit="3" update="messages" dragDropSupport="true"/>
+                        </p:panelGrid>
+                    </p:panelGrid>
 
-                </h:panelGrid>
+                    <p:chart id="tempHumidChart" type="line" model="#{graph.chartModel}" style="height:400px;" responsive="true"/>
+                </h:form>
             </p:tab>
+            <p:tab title="Media">
+                <h:form enctype="multipart/form-data">
+                    <p:panelGrid columns="3">
+                        <p:outputLabel value="Select a file : "/>
+                        <p:fileUpload mode="advanced" fileUploadListener="#{media.upload}" allowTypes="/(\.|\/)(mp3)$/" update="messages"/>
+                        <p:outputLabel />
+
+                        <p:outputLabel value="Select a URL : "></p:outputLabel>
+                        <p:inputText/>
+                        <p:commandButton value="Download"></p:commandButton>
+                    </p:panelGrid>
+                    <p:dataTable >
+                        <p:column headerText="S.N."></p:column>
+                        <p:column headerText="Name"></p:column>
+                        <p:column headerText="Size"></p:column>
+                        <p:column headerText="Time"></p:column>
+                    </p:dataTable>
+                    <p:panelGrid columns="12">
+                        <p:commandButton value="Previous"></p:commandButton>
+                        <p:commandButton value="Play"></p:commandButton>
+                        <p:commandButton value="Stop"></p:commandButton>
+                        <p:commandButton value="Next"></p:commandButton>
+                        <p:commandButton value="-" title="Volume decrease"></p:commandButton>
+                        <p:commandButton value="+"></p:commandButton>
+                        <p:commandButton value="Mute"></p:commandButton>
+                        <p:commandButton value="UnMute"></p:commandButton>
+                        <p:commandButton value="Repeat"></p:commandButton>
+                        <p:commandButton value="Edit"></p:commandButton>
+                        <p:commandButton value="Delete"></p:commandButton>
+                        <p:commandButton value="Delete All"></p:commandButton>
+                    </p:panelGrid>
+                </h:form>
+            </p:tab>
+            <p:tab title="Alarm">
+                <h:form>
+                    <p:panelGrid columns="2">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel value="Name : "></p:outputLabel>
+                            <p:inputText value="#{alarmv.alarmName}"></p:inputText>
+
+                            <p:outputLabel value="Select a song : "></p:outputLabel>
+                            <p:selectOneMenu value="#{alarmv.songName}"></p:selectOneMenu>
+
+                            <p:outputLabel value="Date and time : "></p:outputLabel>
+                            <p:calendar pattern="MM/dd/yyyy HH:mm" value="#{alarmv.date}"></p:calendar>
+
+                            <p:outputLabel value="Alarm Type : "></p:outputLabel>
+                            <p:selectOneMenu value="#{alarmv.alarmType}">
+                                <f:selectItems value="#{utility.alarmTypes}" var="val" itemLabel="#{val}" itemValue="#{val}"/>
+                            </p:selectOneMenu>
+
+                        </p:panelGrid>
+                        <p:panelGrid columns="2">
+
+                            <p:outputLabel value="Recursion Type : "></p:outputLabel>
+                            <p:selectOneMenu value="#{alarmv.recursionType}">
+                                <f:selectItems value="#{utility.recursionTypes}" var="val" itemLabel="#{val}" itemValue="#{val}"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel value="Alarm Frequency : "></p:outputLabel>
+                            <p:selectOneMenu value="#{alarmv.frequency}">
+                                <f:selectItems value="#{utility.frequencies}" var="val" itemLabel="#{val}" itemValue="#{val}"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel value="Alarm Enable : "></p:outputLabel>
+                            <p:inputSwitch value="#{alarmv.alarmEnable}"/>
+                        </p:panelGrid>
+                    </p:panelGrid>
+                    <p:panelGrid columns="6">
+                        <p:commandButton value="Play"/>
+                        <p:commandButton value="Stop"/>
+                        <p:commandButton value="Save"></p:commandButton>
+                        <p:commandButton value="Edit"></p:commandButton>
+                        <p:commandButton value="Delete"></p:commandButton>
+                        <p:commandButton value="Delete All"></p:commandButton>
+                    </p:panelGrid>
+                    <p:dataTable>
+                        <p:column headerText="S.N."></p:column>
+                        <p:column headerText="Name"></p:column>
+                        <p:column headerText="Song Name"></p:column>
+                        <p:column headerText="Time"></p:column>
+                        <p:column headerText="Type"></p:column>
+                        <p:column headerText="Enable"></p:column>
+                    </p:dataTable>
+                </h:form>
+            </p:tab>
+            <p:tab title="MD Camera"></p:tab>
+            <p:tab title="Others"></p:tab>
         </p:tabView>
     </h:body>
 </html>

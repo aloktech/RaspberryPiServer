@@ -5,6 +5,7 @@
  */
 package com.imos.pi.alarm;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,8 +16,10 @@ import lombok.ToString;
  */
 @Getter
 @Setter
+@EqualsAndHashCode(exclude = {"id", "songData"})
 @ToString
 public class SongBean {
+
     private int id;
     private String songName;
     private String songPath;

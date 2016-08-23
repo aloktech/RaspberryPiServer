@@ -3,14 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.imos.pi.alarm;
+
+
+import com.google.inject.AbstractModule;
 
 /**
  *
  * @author Alok
  */
-public enum AlarmType {
-    DAILY,
-    SELECTIVE,
-    RECURRING;
+public class SampleModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+    }
+
 }

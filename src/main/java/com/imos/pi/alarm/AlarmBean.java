@@ -19,14 +19,20 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(exclude = "id")
+@EqualsAndHashCode(exclude = {"id", "enable", "active", "executed"})
 @ManagedBean(name = "alarm")
 public class AlarmBean {
+
     private int id;
     private SongBean song;
-    private Date hourAndMinute;
-    private Date dateAndTimeToPlay;
+    private Date dateAndTime;
     private AlarmType alarmType;
     private boolean enable;
+    private boolean active;
+    private boolean executed;
     private String alarmName;
+    private int incrementByDays;
+    private int incrementByHours;
+    private int incrementByMinutes;
+    private int frequency;
 }

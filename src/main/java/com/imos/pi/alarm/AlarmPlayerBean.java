@@ -6,7 +6,6 @@
 package com.imos.pi.alarm;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.Timer;
@@ -26,16 +25,28 @@ public class AlarmPlayerBean {
     public void checkStatusDaily() {
 
         Set<AlarmBean> alarms = AlarmRepository.getInstance().getAllAlarms();
+        Calendar cal = GregorianCalendar.getInstance();
+        int day = cal.get(Calendar.DAY_OF_MONTH);
         alarms.stream()
-                .filter(a -> a.isEnable())
-                .forEach(a -> {
+                .filter(a -> a.isEnable() && !a.isActive())
+                .forEach(alarm -> {
                     Timer timer = new Timer();
-                    ScheduledTask task = new ScheduledTask();
-                    task.setAlarm(a);
-                    Date date = AlarmType.DAILY.equals(a.getAlarmType()) ? a.getHourAndMinute() : a.getDateAndTimeToPlay();
-                    Calendar cal = GregorianCalendar.getInstance();
-                    cal.setTime(date);
-                    timer.schedule(task, cal.getTime());
+                    ScheduledTask task = new ScheduledTask(timer, alarm);
+                    cal.setTime(alarm.getDateAndTime());
+                    cal.set(Calendar.DAY_OF_MONTH, day);
+                    if (AlarmType.RECURRING == alarm.getAlarmType() && (alarm.getIncrementByDays() == 0 || alarm.getIncrementByDays() > 1)) {
+                        long delay = 0;
+                        if (alarm.getIncrementByDays() > 1) {
+                            delay = alarm.getIncrementByDays() * 24 * 3600 * 1000L;
+                        } else if (alarm.getIncrementByHours() > 0) {
+                            delay = alarm.getIncrementByHours() * 3600 * 1000L;
+                        } else if (alarm.getIncrementByMinutes() > 0) {
+                            delay = alarm.getIncrementByMinutes() * 60 * 1000L;
+                        }
+                        timer.scheduleAtFixedRate(task, cal.getTime(), delay);
+                    } else {
+                        timer.schedule(task, cal.getTime());
+                    }
                 });
     }
 }

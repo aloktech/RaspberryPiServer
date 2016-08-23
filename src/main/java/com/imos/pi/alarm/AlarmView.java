@@ -49,8 +49,8 @@ public class AlarmView {
         AlarmRepository.getInstance().addAlarm(alarmBean);
     }
 
-    public void editAlarm() {
-        AlarmRepository.getInstance().editAlarm(alarmBean);
+    public void updateAlarm() {
+        AlarmRepository.getInstance().updateAlarm(alarmBean);
     }
 
     public void deleteAlarm() {
