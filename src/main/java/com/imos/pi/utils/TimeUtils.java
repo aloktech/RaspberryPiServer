@@ -39,6 +39,19 @@ public class TimeUtils {
         return builder.toString();
     }
 
+    public String getCurrentDate() {
+
+        StringBuilder builder = new StringBuilder();
+        INSTANCE.setTimeInMillis(System.currentTimeMillis());
+        builder.append(INSTANCE.get(Calendar.DAY_OF_MONTH));
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.MONTH) + 1);
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.YEAR));
+
+        return builder.toString();
+    }
+
     public String getCurrentTime() {
         StringBuilder builder = new StringBuilder();
         INSTANCE.setTimeInMillis(System.currentTimeMillis());
@@ -47,6 +60,23 @@ public class TimeUtils {
         builder.append(INSTANCE.get(Calendar.MINUTE));
         builder.append(UNDER_SCORE);
         builder.append(INSTANCE.get(Calendar.SECOND));
+
+        return builder.toString();
+    }
+
+    public String getYesterdayDate() {
+        StringBuilder builder = new StringBuilder();
+        INSTANCE.setTimeInMillis(System.currentTimeMillis());
+        int tempDay = INSTANCE.get(Calendar.DAY_OF_MONTH), day;
+        Calendar temp = GregorianCalendar.getInstance();
+        temp.set(Calendar.MONTH, INSTANCE.get(Calendar.MONTH) - 1);
+        temp.set(Calendar.DAY_OF_MONTH, 1);
+        day = tempDay == 1 ? temp.getActualMaximum(Calendar.DAY_OF_MONTH) : tempDay - 1;
+        builder.append(day);
+        builder.append(UNDER_SCORE);
+        builder.append(tempDay == 1 ? INSTANCE.get(Calendar.MONTH) : INSTANCE.get(Calendar.MONTH) + 1);
+        builder.append(UNDER_SCORE);
+        builder.append(INSTANCE.get(Calendar.YEAR));
 
         return builder.toString();
     }

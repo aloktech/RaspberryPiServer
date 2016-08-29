@@ -29,8 +29,8 @@ public class MediaView implements Serializable {
     private UploadedFile file;
 
     public void upload(FileUploadEvent event) {
-         try {
-            Files.write(event.getFile().getContents(), new File(RaspberryPiConstant.MUSIC_DIR+event.getFile().getFileName()));
+        try {
+            Files.write(event.getFile().getContents(), new File(RaspberryPiConstant.MUSIC_DIR + event.getFile().getFileName()));
             DashboardUtils.setMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
         } catch (IOException ex) {
             DashboardUtils.setMessage("Failure", event.getFile().getFileName() + " is uploaded.");

@@ -14,7 +14,7 @@ import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.imos.pi.common.RaspberryPiConstant;
 import static com.imos.pi.common.RaspberryPiConstant.TIME;
-import com.imos.pi.th.TimeTempHumidData;
+import com.imos.pi.database.TimeTempHumidData;
 import com.imos.pi.utils.HazelcastFactory;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 import lombok.extern.java.Log;
 import org.json.JSONArray;
@@ -46,19 +47,24 @@ public final class HazelcastService {
     private final ObjectWriter output;
     private Optional<String> data;
     private final Calendar cal = GregorianCalendar.getInstance();
-    private final IMap<Long, TimeTempHumidData> map;
+    private IMap<Long, TimeTempHumidData> map;
 
     public HazelcastService() {
         output = MAPPER.writer().withDefaultPrettyPrinter();
+    }
+
+    @PostConstruct
+    public void init() {
 
         HazelcastInstance hazelcastInstance = HazelcastFactory.getInstance().getHazelcastInstance();
         map = hazelcastInstance.getMap(RaspberryPiConstant.TEMP_HUMID_MAP);
 
-        //populateHazelcastDB();
+        new Thread(() -> populateHazelcastDB()).start();
+
+        System.out.println(map.size());
     }
 
     public void saveData(String data) {
-        System.out.println(data);
         this.data = Optional.of(data);
         if (this.data.isPresent()) {
             try {
@@ -66,7 +72,6 @@ public final class HazelcastService {
                 for (int index = 0, size = array.length(); index < size; index++) {
                     try {
                         JSONObject obj = array.getJSONObject(index);
-                        System.out.println(obj.toString());
                         long time = getValue(obj);
                         obj.put(TIME, time);
                         map.put(time, MAPPER.readValue(obj.toString(), TimeTempHumidData.class));
@@ -101,19 +106,40 @@ public final class HazelcastService {
         }
     }
 
+    public Collection<String> getAllData() {
+        if (map.isEmpty()) {
+            return new ArrayList<>();
+        } else {
+            System.out.println("loop start");
+            
+            return map.entrySet().stream()
+                    .sorted((t1, t2) -> t1.getKey() < t2.getKey() ? -1 : 1)
+                    .map(o -> {
+                        try {
+                            return new JSONObject(output.writeValueAsString(o.getValue())).toString();
+                        } catch (JsonProcessingException | JSONException e) {
+                            return new JSONObject().toString();
+                        }
+                    })
+                    .collect(Collectors.toList());
+        }
+    }
+
     public Collection<String> extractDataForTimeRange(long start, long end) {
+        System.out.println("entry");
         if (map.isEmpty()) {
             return new ArrayList<>();
         } else {
             Predicate startPredicate = Predicates.greaterEqual(TIME, start);
             Predicate endPredicate = Predicates.lessEqual(TIME, end);
             Predicate predicate = Predicates.and(startPredicate, endPredicate);
-
+            System.out.println("loop start");
             return map.values(predicate)
                     .stream()
                     .sorted((t1, t2) -> t1.getTime() < t2.getTime() ? -1 : 1)
                     .map(o -> {
                         try {
+                            System.out.println(o);
                             return new JSONObject(output.writeValueAsString(o)).toString();
                         } catch (JsonProcessingException | JSONException e) {
                             return new JSONObject().toString();
@@ -148,7 +174,10 @@ public final class HazelcastService {
     public void populateHazelcastDB() {
         try {
 //            searchDirectoryAndPopulateHazelcastDB(new File("." + File.separator + "Backup"));
-            searchDirectoryAndPopulateHazelcastDB(new File("."));
+//            searchDirectoryAndPopulateHazelcastDB(new File("."));
+            System.out.println("upload entry");
+            searchDirectoryAndPopulateHazelcastDB(new File("/home/pi/NetBeansProjects/RaspberryPiServer/Backup/data.json"));
+            System.out.println("upload end");
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
@@ -159,11 +188,15 @@ public final class HazelcastService {
             for (File tempFile : file.listFiles()) {
                 if (tempFile.isDirectory()) {
                     searchDirectoryAndPopulateHazelcastDB(tempFile);
-                } else if (tempFile.isFile() && tempFile.getName().endsWith(".json") && tempFile.getName().matches("\\d{1,2}_\\d{1,2}_\\d{4}_\\d{1,2}_\\d{1,2}_\\d{1,2}\\.json")) {
+                } else if (tempFile.isFile() && tempFile.getName().endsWith(".json")
+                        && (tempFile.getName().matches("\\d{1,2}_\\d{1,2}_\\d{4}_\\d{1,2}_\\d{1,2}_\\d{1,2}\\.json")
+                        || tempFile.getName().equals("data.json"))) {
                     uploadFile(com.google.common.io.Files.toString(tempFile, StandardCharsets.UTF_8));
                 }
             }
-        } else if (file.isFile() && file.getName().endsWith(".json") && file.getName().matches("\\d{1,2}_\\d{1,2}_\\d{4}_\\d{1,2}_\\d{1,2}_\\d{1,2}\\.json")) {
+        } else if (file.isFile() && file.getName().endsWith(".json")
+                && (file.getName().matches("\\d{1,2}_\\d{1,2}_\\d{4}_\\d{1,2}_\\d{1,2}_\\d{1,2}\\.json")
+                || file.getName().equals("data.json"))) {
             uploadFile(com.google.common.io.Files.toString(file, StandardCharsets.UTF_8));
         }
     }
@@ -173,12 +206,11 @@ public final class HazelcastService {
         for (int index = 0, size = array.length(); index < size; index++) {
             try {
                 JSONObject obj = array.getJSONObject(index);
-                System.out.println(obj.toString());
                 long time = getValue(obj);
                 obj.put(TIME, time);
                 map.put(time, MAPPER.readValue(obj.toString(), TimeTempHumidData.class));
             } catch (Exception e) {
-                 System.out.println("### : "+array.get(index).toString());
+                System.out.println("### : " + array.get(index).toString());
                 log.severe(e.getMessage());
             }
         }

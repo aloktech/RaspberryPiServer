@@ -5,26 +5,22 @@
  */
 package com.imos.pi.th;
 
+import com.imos.pi.database.TimeTempHumidData;
+import com.imos.pi.database.TempHumidData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.io.Files;
 import com.imos.pi.utils.ProcessExecutor;
-import com.imos.pi.utils.HazelcastFactory;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.imos.pi.common.DayLight;
 import static com.imos.pi.common.RaspberryPiConstant.*;
-import com.imos.pi.service.HazelcastService;
+import com.imos.pi.database.DatabaseList;
 import com.imos.pi.utils.TimeUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import lombok.Getter;
@@ -46,21 +42,18 @@ public class TempAndHumidSensorController {
     private double temp, humid;
     private final int tempLength = TEMPERATURE.length(), humidLength = HUMIDITY.length();
     private ProcessExecutor executor;
-    private IMap<String, String> current;
-    private IMap<Long, TimeTempHumidData> hazelcastDB, tempDB;
-    private final HazelcastInstance hazelcastInstance;
     @Getter
     private final List<String> command;
 
     private final TimeUtils timeUtils;
 
     private final ObjectMapper MAPPER = new ObjectMapper();
-    private final ObjectWriter ow;
-    @Setter @Getter
+    @Setter
+    @Getter
     private String baseFolder;
 
     @Inject
-    private HazelcastService hazelcastService;
+    private DatabaseList databaseList;
 
     public TempAndHumidSensorController() {
         command = new ArrayList<>();
@@ -70,16 +63,15 @@ public class TempAndHumidSensorController {
         command.add("22");
         command.add("4");
 
-        hazelcastInstance = HazelcastFactory.getInstance().getHazelcastInstance();
-
         timeUtils = new TimeUtils();
 
-        ow = MAPPER.writer().withDefaultPrettyPrinter();
-        
         baseFolder = "/home/pi/NetBeansProjects/RaspberryPiServer/";
     }
 
     public void executeTheSensor() {
+        if (!System.getProperty("os.name").equals("Linux")) {
+            return;
+        }
         try {
             data = executeCommand(command);
 
@@ -92,16 +84,13 @@ public class TempAndHumidSensorController {
 
             TimeTempHumidData jsonData = new TimeTempHumidData();
             jsonData.setData(tempHumidData);
-            long time = System.currentTimeMillis();
-            jsonData.setTime(time);
+            jsonData.setTime(System.currentTimeMillis());
 
-            hazelcastDB = hazelcastInstance.getMap(TEMP_HUMID_MAP);
-            current = hazelcastInstance.getMap(TEMP_HUMID_CURRENT);
-            hazelcastDB.put(time, jsonData);
+            databaseList.addData(jsonData);
+            databaseList.setCurrentValue(jsonData);
 
-            current.put(CURRENT, ow.writeValueAsString(jsonData.getData()));
             log.info(timeUtils.getCurrentTimeWithDate());
-        } catch (NumberFormatException | JSONException | JsonProcessingException e) {
+        } catch (NumberFormatException | JSONException e) {
             log.info(e.getMessage());
         }
     }
@@ -109,34 +98,72 @@ public class TempAndHumidSensorController {
     public void saveDataAsJSON() {
         String fileName = timeUtils.getYesterdayTimeWithDate();
         long yesterdayTime = timeUtils.getYesterdayTime();
-        
-        System.out.println(fileName);
 
-        Calendar cal = GregorianCalendar.getInstance();
-        cal.setTimeInMillis(yesterdayTime);
-        System.out.println(cal.getTime());
-        JSONArray arrayData = new JSONArray();
-        hazelcastService.extractDataForTimeRange(timeUtils.extractTime(cal, DayLight.START),
-                timeUtils.extractTime(cal, DayLight.END))
+        final JSONArray arrayData = new JSONArray();
+        databaseList.getDayData(yesterdayTime)
                 .stream()
-                .forEach((entry) -> {
-                    arrayData.put(new JSONObject(entry));
+                .forEach(d -> {
+                    try {
+                        arrayData.put(new JSONObject(MAPPER.writeValueAsString(d)));
+                    } catch (JsonProcessingException | JSONException e) {
+                    }
                 });
 
         try {
-            Files.write(arrayData.toString().getBytes(), new File(baseFolder + fileName + ".json"));
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.CREATE_NEW);
+        } catch (IOException ex) {
+            log.severe(ex.getMessage());
+        }
+
+        fileName = timeUtils.getYesterdayDate();
+        new File(fileName).delete();
+
+        final JSONArray allData = new JSONArray();
+        DatabaseList.getInstance()
+                .getAllData()
+                .stream()
+                .forEach(d -> {
+                    try {
+                        allData.put(new JSONObject(MAPPER.writeValueAsString(d)));
+                    } catch (JsonProcessingException | JSONException e) {
+                    }
+                });
+        try {
+            Files.write(Paths.get(baseFolder + "allData.json"), allData.toString().getBytes(), StandardOpenOption.CREATE_NEW);
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
     }
-    
-    public void updateLocalDB() {
-        if (tempDB == null) {
-            tempDB = hazelcastDB;
+    List<TimeTempHumidData> tempData;
+
+    public void updateLocalDB() throws IOException {
+        String fileName = timeUtils.getCurrentDate();
+        File file = new File(baseFolder + fileName + ".json");
+
+        if (file.exists()) {
+            tempData = Arrays.asList(MAPPER.readValue(file, TimeTempHumidData[].class));
         } else {
-            Map<Long, TimeTempHumidData> temp = new HashMap<>(hazelcastDB);
+            tempData = new ArrayList<>();
         }
-        
+
+        tempData.addAll(databaseList.getDayData(System.currentTimeMillis()));
+
+        JSONArray arrayData = new JSONArray();
+        tempData.stream()
+                .sorted((d1, d2) -> Long.compare(d1.getTime(), d2.getTime()))
+                .distinct()
+                .forEach(d -> {
+                    try {
+                        arrayData.put(new JSONObject(MAPPER.writeValueAsString(d)));
+                    } catch (JsonProcessingException | JSONException e) {
+                    }
+                });
+
+        try {
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.CREATE_NEW);
+        } catch (IOException ex) {
+            log.severe(ex.getMessage());
+        }
     }
 
     public String executeCommand(List<String> command) {

@@ -29,8 +29,6 @@ public class MediaRESTService {
         JSONObject status = new JSONObject(data);
         status.put("status", "OK");
         
-        System.out.println("POST : "+status.toString());
-        
         return Response.status(Response.Status.CREATED).entity(status.toString()).build();
     }
     
@@ -42,8 +40,6 @@ public class MediaRESTService {
         JSONObject status = new JSONObject(data);
         status.put("status", "OK");
         
-        System.out.println("POST : "+status.toString());
-        
         return Response.status(Response.Status.CREATED).entity(status.toString()).build();
     }
     
@@ -54,8 +50,6 @@ public class MediaRESTService {
         
         JSONObject status = new JSONObject();
         status.put("status", "OK");
-        
-        System.out.println("POST : "+status.toString());
         
         return Response.status(Response.Status.CREATED).entity(status.toString()).build();
     }

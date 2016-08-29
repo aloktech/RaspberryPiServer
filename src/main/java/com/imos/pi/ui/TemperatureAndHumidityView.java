@@ -5,24 +5,20 @@
  */
 package com.imos.pi.ui;
 
-import com.google.common.io.Files;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imos.pi.ui.utils.DashboardUtils;
-import com.imos.pi.common.DayLight;
-import static com.imos.pi.common.RaspberryPiConstant.CURRENT;
-import static com.imos.pi.common.RaspberryPiConstant.TEMP_HUMID_CURRENT;
-import com.imos.pi.service.HazelcastService;
+import com.imos.pi.database.DatabaseList;
+import com.imos.pi.database.TimeTempHumidData;
 import static com.imos.pi.ui.utils.DashboardConstant.*;
-import com.imos.pi.utils.HazelcastFactory;
 import com.imos.pi.utils.TimeUtils;
-import java.io.File;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -32,8 +28,6 @@ import javax.inject.Inject;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SlideEndEvent;
 import org.primefaces.json.JSONException;
@@ -60,13 +54,13 @@ public class TemperatureAndHumidityView implements Serializable {
     private String timeIntervalStr;
     private double currTemp, maxTemp, minTemp, avgTemp;
     private double currHumid, maxHumid, minHumid, avgHumid;
-    private ConcurrentMap<String, String> current;
-    private ConcurrentMap<String, String> map, tempMap;
-
-    @Inject
-    private HazelcastService hazelcastService;
 
     private TimeUtils timeUtils;
+
+    private final ObjectMapper MAPPER = new ObjectMapper();
+    
+    @Inject
+    private DatabaseList databaseList;
 
     @PostConstruct
     public void init() {
@@ -94,56 +88,52 @@ public class TemperatureAndHumidityView implements Serializable {
     private LineChartModel uploadChartData(LineChartModel chartModel) throws JSONException {
         Calendar cal = GregorianCalendar.getInstance();
         cal.setTime(date);
+        chartModel.setTitle(String.format("Temperature and Humidity Daily Chart on %s",
+                new SimpleDateFormat("dd-MMM-yy").format(date)));
 
-        String allData = hazelcastService.extractDataForTimeRange(timeUtils.extractTime(cal, DayLight.START),
-                timeUtils.extractTime(cal, DayLight.END)).toString();
-
-        JSONArray tempArray = new JSONArray(allData);
         ChartSeries temperatureSeries = new ChartSeries();
         temperatureSeries.setLabel(TEMPERATURE);
         ChartSeries humiditySeries = new ChartSeries();
         humiditySeries.setLabel(HUMIDITY);
-        double tempd, humidd;
-        int count = 0, valueCounter = 0;
-        if (tempArray.length() > 0) {
-            for (int index = 0; index < tempArray.length(); index++) {
-                JSONObject tempJson = tempArray.getJSONObject(index);
-                cal.setTimeInMillis(tempJson.getLong(TIME));
-                int hval = cal.get(Calendar.HOUR_OF_DAY);
-                int mval = cal.get(Calendar.MINUTE);
-                String time = (hval < 10 ? "0" + hval : hval) + "-" + (mval < 10 ? "0" + mval : mval);
+        final AtomicInteger valueCounter = new AtomicInteger(0);
+        final AtomicInteger count = new AtomicInteger(0);
+        Collection<TimeTempHumidData> allData = databaseList.getDayData(cal.getTimeInMillis());
 
-                JSONObject data = tempJson.getJSONObject(DATA);
-                tempd = data.getDouble(TEMP);
-                humidd = data.getDouble(HUMID);
-
-                if (timeInterval > 0 && count % timeInterval == 0) {
-                    valueCounter = setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
-                } else if (timeInterval == 0) {
-                    valueCounter = setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
-                }
-                count++;
-            }
-            valueCounter = valueCounter == 0 ? count : valueCounter;
-            avgTemp = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgTemp / valueCounter));
-            avgHumid = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgHumid / valueCounter));
-
-            current = HazelcastFactory.getInstance().getHazelcastInstance().getMap(TEMP_HUMID_CURRENT);
-            if (current.get(CURRENT) != null) {
-                JSONObject json = new JSONObject(current.get(CURRENT));
-                currHumid = json.getDouble(HUMID);
-                currTemp = json.getDouble(TEMP);
-            }
-
-            Axis xAxis = chartModel.getAxis(AxisType.X);
-            xAxis.setTickAngle(90);
-        } else {
+        if (allData.isEmpty()) {
             temperatureSeries.set(DATA_NOT_AVAILABLE, 50);
             humiditySeries.set(DATA_NOT_AVAILABLE, 60);
             Axis xAxis = chartModel.getAxis(AxisType.X);
             xAxis.setTickAngle(0);
 
             maxTemp = maxHumid = minTemp = minHumid = avgTemp = avgHumid = 0;
+        } else {
+            allData.stream()
+                    .forEach(d -> {
+                        cal.setTimeInMillis(d.getTime());
+                        int hval = cal.get(Calendar.HOUR_OF_DAY);
+                        int mval = cal.get(Calendar.MINUTE);
+                        String time = (hval < 10 ? "0" + hval : hval) + "-" + (mval < 10 ? "0" + mval : mval);
+                        double tempd = d.getData().getTemperature();
+                        double humidd = d.getData().getHumidity();
+                        if (timeInterval > 0 && count.get() % timeInterval == 0) {
+                            setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
+                        } else if (timeInterval == 0) {
+                            setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
+                        }
+                        count.incrementAndGet();
+                    });
+            valueCounter.set(valueCounter.get() == 0 ? count.get() : valueCounter.get());
+            avgTemp = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgTemp / valueCounter.get()));
+            avgHumid = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgHumid / valueCounter.get()));
+
+            TimeTempHumidData current = databaseList.getCurrentValue();
+            if (current  != null) {
+                currHumid =current.getData().getHumidity();
+                currTemp = current.getData().getTemperature();
+            }
+
+            Axis xAxis = chartModel.getAxis(AxisType.X);
+            xAxis.setTickAngle(90);
         }
 
         chartModel.clear();
@@ -153,15 +143,14 @@ public class TemperatureAndHumidityView implements Serializable {
         return chartModel;
     }
 
-    private int setTempAndHumidValue(double tempd, double humidd, ChartSeries temperature,
-            String time, ChartSeries humidity, int valueCounter) {
+    private void setTempAndHumidValue(double tempd, double humidd, ChartSeries temperature,
+            String time, ChartSeries humidity, AtomicInteger valueCounter) {
 
         calculateMinMax(tempd, humidd);
 
         temperature.set(time, tempd);
         humidity.set(time, humidd);
-        valueCounter++;
-        return valueCounter;
+        valueCounter.incrementAndGet();
     }
 
     private void calculateMinMax(double tempd, double humidd) {
@@ -192,16 +181,15 @@ public class TemperatureAndHumidityView implements Serializable {
     }
 
     public void uploadFile(FileUploadEvent event) {
-        try {
-            System.out.println(event.getFile().getFileName());
-            File file = new File("." + File.separator + event.getFile().getFileName());
-            Files.write(event.getFile().getContents(), file);
-            hazelcastService.saveData(Files.toString(file, StandardCharsets.UTF_8));
-            file.delete();
-        } catch (Exception ex) {
-            log.severe(ex.getMessage());
-        }
-        DashboardUtils.setMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
+//        try {
+//            File file = new File("." + File.separator + event.getFile().getFileName());
+//            Files.write(event.getFile().getContents(), file);
+//            hazelcastService.saveData(Files.toString(file, StandardCharsets.UTF_8));
+//            file.delete();
+//        } catch (Exception ex) {
+//            log.severe(ex.getMessage());
+//        }
+//        DashboardUtils.setMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
     }
 
     public void uploadChart(ActionEvent event) {
@@ -215,6 +203,6 @@ public class TemperatureAndHumidityView implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, message);
         timeIntervalStr = String.format("Time interval : %d", timeInterval);
 
-        uploadChartData(chartModel);
+//        uploadChartData(chartModel);
     }
 }
