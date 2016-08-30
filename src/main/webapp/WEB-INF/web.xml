@@ -7,30 +7,6 @@
         <param-value>Development</param-value>
     </context-param>
     <servlet>
-        <servlet-name>BasicRESTService Web Application</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
-            <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>
-                org.glassfish.jersey.media.multipart,
-                com.imos.pi.th
-            </param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
-            <param-value>true</param-value>
-        </init-param>
-        <init-param>
-            <param-name>jersey.config.server.provider.classnames</param-name>
-            <param-value>
-                org.glassfish.jersey.media.multipart.MultiPartFeature,
-                org.glassfish.jersey.media.multipart.MultiPartResource,
-                com.imos.pi.th.CorsFilter
-            </param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
@@ -39,18 +15,6 @@
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>/faces/*</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>BasicRESTService Web Application</servlet-name>
-        <url-pattern>/basic/*</url-pattern>
-    </servlet-mapping>
-    <filter>
-        <filter-name>BasicRequestFilter</filter-name>
-        <filter-class>com.imos.pi.th.BasicRequestFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>BasicRequestFilter</filter-name>
-        <url-pattern>/rest/*</url-pattern>
-    </filter-mapping>
     <session-config>
         <session-timeout>
             30

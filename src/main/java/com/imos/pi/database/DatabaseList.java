@@ -37,9 +37,9 @@ public class DatabaseList {
 
     private static final Map<String, TimeTempHumidData> CURRENT_MAP = new HashMap<>();
 
-    public static final Map<Long, ListMonthIndex> MONTH_LIST_INDEX_MAP = new HashMap<>();
-
     public static final Map<Long, ListDayIndex> DAY_LIST_INDEX_MAP = new HashMap<>();
+
+    public final Calendar CALENDAR = GregorianCalendar.getInstance();
 
     private static DatabaseList INSTANCE;
 
@@ -77,8 +77,6 @@ public class DatabaseList {
 
         return INSTANCE;
     }
-
-    public final static Calendar CALENDAR = GregorianCalendar.getInstance();
 
     public void setCurrentValue(TimeTempHumidData data) {
         CURRENT_MAP.put("CURRENT", data);

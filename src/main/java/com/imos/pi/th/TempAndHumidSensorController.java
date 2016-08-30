@@ -110,7 +110,7 @@ public class TempAndHumidSensorController {
                 });
 
         try {
-            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.CREATE_NEW);
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
@@ -129,7 +129,7 @@ public class TempAndHumidSensorController {
                     }
                 });
         try {
-            Files.write(Paths.get(baseFolder + "allData.json"), allData.toString().getBytes(), StandardOpenOption.CREATE_NEW);
+            Files.write(Paths.get(baseFolder + "allData.json"), allData.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
@@ -141,7 +141,7 @@ public class TempAndHumidSensorController {
         File file = new File(baseFolder + fileName + ".json");
 
         if (file.exists()) {
-            tempData = Arrays.asList(MAPPER.readValue(file, TimeTempHumidData[].class));
+            tempData = new ArrayList<>(Arrays.asList(MAPPER.readValue(file, TimeTempHumidData[].class)));
         } else {
             tempData = new ArrayList<>();
         }
@@ -158,10 +158,11 @@ public class TempAndHumidSensorController {
                     } catch (JsonProcessingException | JSONException e) {
                     }
                 });
-
+        
         try {
-            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.CREATE_NEW);
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ex) {
+            ex.printStackTrace();
             log.severe(ex.getMessage());
         }
     }

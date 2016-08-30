@@ -9,8 +9,10 @@ package com.imos.pi.ui.utils;
  *
  * @author Alok
  */
-public class DashboardConstant {
+public final class DashboardConstant {
 
+    private DashboardConstant(){}
+    
     public static final String UNDER_SCORE = "_";
     public static final String SLASH = "/";
     public static final String COLON = ":";
