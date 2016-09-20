@@ -6,6 +6,7 @@
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.imos.pi.th.TempAndHumidSensorController;
+import java.io.IOException;
 import org.junit.Test;
 
 /**
@@ -18,7 +19,7 @@ public class TempAndHumidSensorControllerTest {
     TempAndHumidSensorController controller = injector.getInstance(TempAndHumidSensorController.class);
 
     @Test
-    public void test() {
+    public void test() throws IOException {
         controller.setBaseFolder(".");
         controller.saveDataAsJSON();
     }

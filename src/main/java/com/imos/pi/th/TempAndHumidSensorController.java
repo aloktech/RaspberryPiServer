@@ -89,19 +89,33 @@ public class TempAndHumidSensorController {
             databaseList.addData(jsonData);
             databaseList.setCurrentValue(jsonData);
 
+            saveToLocalDB(jsonData);
+
             log.info(timeUtils.getCurrentTimeWithDate());
         } catch (NumberFormatException | JSONException e) {
             log.info(e.getMessage());
         }
     }
 
-    public void saveDataAsJSON() {
-        String fileName = timeUtils.getYesterdayTimeWithDate();
-        long yesterdayTime = timeUtils.getYesterdayTime();
-
+    public void saveDataAsJSON() throws IOException {
+        String fileName;
         final JSONArray arrayData = new JSONArray();
-        databaseList.getDayData(yesterdayTime)
-                .stream()
+
+        fileName = timeUtils.getYesterdayDate();
+        long yesterdayTime = timeUtils.getYesterdayTime();
+        File file = new File(baseFolder + fileName + ".json");
+
+        if (file.exists()) {
+            tempData = new ArrayList<>(Arrays.asList(MAPPER.readValue(file, TimeTempHumidData[].class)));
+        } else {
+            tempData = new ArrayList<>();
+        }
+
+        tempData.addAll(databaseList.getOneDayData(yesterdayTime));
+
+        tempData.stream()
+                .sorted((d1, d2) -> Long.compare(d1.getTime(), d2.getTime()))
+                .distinct()
                 .forEach(d -> {
                     try {
                         arrayData.put(new JSONObject(MAPPER.writeValueAsString(d)));
@@ -110,26 +124,28 @@ public class TempAndHumidSensorController {
                 });
 
         try {
-            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(),
+                    StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
 
-        fileName = timeUtils.getYesterdayDate();
-        new File(fileName).delete();
+        Files.deleteIfExists(Paths.get(fileName));
 
-        final JSONArray allData = new JSONArray();
         DatabaseList.getInstance()
                 .getAllData()
                 .stream()
+                .sorted((d1, d2) -> Long.compare(d1.getTime(), d2.getTime()))
+                .distinct()
                 .forEach(d -> {
                     try {
-                        allData.put(new JSONObject(MAPPER.writeValueAsString(d)));
+                        arrayData.put(new JSONObject(MAPPER.writeValueAsString(d)));
                     } catch (JsonProcessingException | JSONException e) {
                     }
                 });
         try {
-            Files.write(Paths.get(baseFolder + "allData.json"), allData.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(Paths.get(baseFolder + "allData.json"), arrayData.toString().getBytes(),
+                    StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
         } catch (IOException ex) {
             log.severe(ex.getMessage());
         }
@@ -146,7 +162,7 @@ public class TempAndHumidSensorController {
             tempData = new ArrayList<>();
         }
 
-        tempData.addAll(databaseList.getDayData(System.currentTimeMillis()));
+        tempData.addAll(databaseList.getOneDayData(System.currentTimeMillis()));
 
         JSONArray arrayData = new JSONArray();
         tempData.stream()
@@ -158,12 +174,41 @@ public class TempAndHumidSensorController {
                     } catch (JsonProcessingException | JSONException e) {
                     }
                 });
-        
+
         try {
-            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(),
+                    StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
         } catch (IOException ex) {
-            ex.printStackTrace();
             log.severe(ex.getMessage());
+        }
+    }
+
+    public void saveToLocalDB(TimeTempHumidData data) {
+        String fileName = timeUtils.getCurrentDate();
+        File file = new File(baseFolder + fileName + ".json");
+
+        try {
+            if (file.exists()) {
+                tempData = new ArrayList<>(Arrays.asList(MAPPER.readValue(file, TimeTempHumidData[].class)));
+            } else {
+                tempData = new ArrayList<>();
+            }
+            tempData.add(data);
+            JSONArray arrayData = new JSONArray();
+            tempData.stream()
+                    .sorted((d1, d2) -> Long.compare(d1.getTime(), d2.getTime()))
+                    .distinct()
+                    .forEach(d -> {
+                        try {
+                            arrayData.put(new JSONObject(MAPPER.writeValueAsString(d)));
+                        } catch (JsonProcessingException | JSONException e) {
+                        }
+                    });
+
+            Files.write(Paths.get(baseFolder + fileName + ".json"), arrayData.toString().getBytes(),
+                    StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+        } catch (Exception e) {
+            log.severe(e.getMessage());
         }
     }
 

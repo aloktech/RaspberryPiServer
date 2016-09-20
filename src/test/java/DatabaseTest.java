@@ -51,7 +51,7 @@ public class DatabaseTest {
     public void testDayData() {
         Calendar cal = GregorianCalendar.getInstance();
         cal.set(Calendar.DAY_OF_MONTH, 26);
-        System.out.println(DatabaseList.getInstance().getDayData(cal.getTimeInMillis()).size());
+        System.out.println(DatabaseList.getInstance().getOneDayData(cal.getTimeInMillis()).size());
     }
 
     @Test

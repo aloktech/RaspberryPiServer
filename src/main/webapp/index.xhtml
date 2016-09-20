@@ -16,7 +16,7 @@
                         <p:panelGrid columns="2" >
                             <p:outputLabel value="Date"/>
                             <p:calendar value="#{graph.date}" pattern="dd-MMM-yy"/>
-                            <p:outputLabel id="timeInterval" value="Time interval %#{graph.timeIntervalStr}" />
+                            <p:outputLabel id="timeInterval" value="Time interval  : %#{graph.timeIntervalStr}" />
                             <p:slider for="timeInterval" rendered="true" />
                             <p:outputLabel value=""></p:outputLabel>
                             <p:commandButton value="Show Graph" actionListener="#{graph.uploadChart}" update="tempHumidChart, tempHumidTable,messages"/>

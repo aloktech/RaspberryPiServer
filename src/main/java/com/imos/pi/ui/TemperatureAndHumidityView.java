@@ -58,7 +58,7 @@ public class TemperatureAndHumidityView implements Serializable {
     private TimeUtils timeUtils;
 
     private final ObjectMapper MAPPER = new ObjectMapper();
-    
+
     @Inject
     private DatabaseList databaseList;
 
@@ -68,11 +68,9 @@ public class TemperatureAndHumidityView implements Serializable {
         timeUtils = new TimeUtils();
         timeInterval = 12;
 
-        timeIntervalStr = String.format("Time interval : %d", timeInterval);
+        timeIntervalStr = String.format("%d", timeInterval);
 
         chartModel = new LineChartModel();
-        chartModel.setTitle(String.format("Temperature and Humidity Daily Chart on %s",
-                new SimpleDateFormat("dd-MMM-yy").format(new Date())));
         chartModel.setLegendPosition("ne");
         chartModel.setShowPointLabels(false);
         chartModel.getAxes().put(AxisType.X, new CategoryAxis("Time"));
@@ -82,14 +80,15 @@ public class TemperatureAndHumidityView implements Serializable {
         Axis yAxis = chartModel.getAxis(AxisType.Y);
         yAxis.setLabel("%");
         yAxis.setMin(20);
-        yAxis.setMax(75);
+        yAxis.setMax(80);
     }
 
     private LineChartModel uploadChartData(LineChartModel chartModel) throws JSONException {
         Calendar cal = GregorianCalendar.getInstance();
         cal.setTime(date);
-        chartModel.setTitle(String.format("Temperature and Humidity Daily Chart on %s",
-                new SimpleDateFormat("dd-MMM-yy").format(date)));
+        chartModel.setTitle(String.format("Temperature and Humidity Daily Chart on %s at time %s",
+                new SimpleDateFormat("dd-MMM-yy").format(date), cal.get(Calendar.HOUR) + ":" + 
+                        cal.get(Calendar.MINUTE) + " " + (cal.get(Calendar.AM_PM) == 0 ? "AM" : "PM")));
 
         ChartSeries temperatureSeries = new ChartSeries();
         temperatureSeries.setLabel(TEMPERATURE);
@@ -97,7 +96,7 @@ public class TemperatureAndHumidityView implements Serializable {
         humiditySeries.setLabel(HUMIDITY);
         final AtomicInteger valueCounter = new AtomicInteger(0);
         final AtomicInteger count = new AtomicInteger(0);
-        Collection<TimeTempHumidData> allData = databaseList.getDayData(cal.getTimeInMillis());
+        Collection<TimeTempHumidData> allData = databaseList.getOneDayData(cal.getTimeInMillis());
 
         if (allData.isEmpty()) {
             temperatureSeries.set(DATA_NOT_AVAILABLE, 50);
@@ -127,8 +126,8 @@ public class TemperatureAndHumidityView implements Serializable {
             avgHumid = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgHumid / valueCounter.get()));
 
             TimeTempHumidData current = databaseList.getCurrentValue();
-            if (current  != null) {
-                currHumid =current.getData().getHumidity();
+            if (current != null) {
+                currHumid = current.getData().getHumidity();
                 currTemp = current.getData().getTemperature();
             }
 

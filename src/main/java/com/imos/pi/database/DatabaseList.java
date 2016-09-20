@@ -105,7 +105,7 @@ public class DatabaseList {
         }
     }
 
-    public List<TimeTempHumidData> getDayData(Long time) {
+    public List<TimeTempHumidData> getOneDayData(Long time) {
         setStartTime(time, false);
 
         ListDayIndex listDayIndex = DAY_LIST_INDEX_MAP.get(CALENDAR.getTimeInMillis());

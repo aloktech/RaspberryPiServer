@@ -6,12 +6,11 @@
 package com.imos.pi.th;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import lombok.extern.java.Log;
 
 /**
  *
@@ -19,6 +18,7 @@ import javax.inject.Inject;
  */
 @Startup
 @Singleton
+@Log
 public class TemperatureSensorBean {
 
     @Inject
@@ -31,15 +31,19 @@ public class TemperatureSensorBean {
 
     @Schedule(second = "0", minute = "0", hour = "0", persistent = false)
     public void saveDataAsJSONIn24Hours() {
-        temperatureSensorBeanController.saveDataAsJSON();
+        try {
+            temperatureSensorBeanController.saveDataAsJSON();
+        } catch (IOException ex) {
+            log.severe(ex.getMessage());
+        }
     }
     
-    @Schedule(second = "0", minute = "*/30", hour = "*", persistent = false)
+//    @Schedule(second = "0", minute = "*/30", hour = "*", persistent = false)
     public void saveDataAsJSONIn30Minutes() {
         try {
             temperatureSensorBeanController.updateLocalDB();
         } catch (IOException ex) {
-            Logger.getLogger(TemperatureSensorBean.class.getName()).log(Level.SEVERE, null, ex);
+            log.severe(ex.getMessage());
         }
     }
 }
