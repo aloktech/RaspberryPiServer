@@ -48,7 +48,7 @@ public class AlarmRepository {
         alarmBean.setEnable(true);
         Calendar calendar = GregorianCalendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 6);
-        calendar.set(Calendar.MINUTE, 45);
+        calendar.set(Calendar.MINUTE, 30);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         alarmBean.setDateAndTime(calendar.getTime());

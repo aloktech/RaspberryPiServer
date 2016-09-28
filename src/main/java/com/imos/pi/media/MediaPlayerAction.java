@@ -5,6 +5,7 @@
  */
 package com.imos.pi.media;
 
+import javax.ejb.DependsOn;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -13,8 +14,9 @@ import javax.ejb.Startup;
  *
  * @author Alok
  */
-@Startup
-@Singleton
+//@Startup
+//@Singleton
+//@DependsOn(value = {"MediaPlayerBean"})
 public class MediaPlayerAction {
     @Schedule(second = "*/1", minute = "*", hour = "*", persistent = false)
     public void playMusic() {

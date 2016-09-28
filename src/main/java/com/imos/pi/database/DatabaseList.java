@@ -5,15 +5,17 @@
  */
 package com.imos.pi.database;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -49,17 +51,15 @@ public class DatabaseList {
 
     public DatabaseList() {
         baseFolder = "/home/pi/NetBeansProjects/RaspberryPiServer/";
-//        String baseFolder = "F:\\Tools\\Netbeans8.1Workspace\\RaspberryPiServer\\src\\main\\resources\\";
     }
 
     @PostConstruct
     public void uploadData() {
-        JsonNode array;
+        TimeTempHumidData[] array;
         try {
-            array = MAPPER.readValue(new File(baseFolder + "allData.json"), JsonNode.class);
-            Iterator<JsonNode> itr = array.iterator();
-            while (itr.hasNext()) {
-                DatabaseList.getInstance().addData(MAPPER.readValue(MAPPER.writeValueAsString(itr.next()), TimeTempHumidData.class));
+            array = MAPPER.readValue(new File(baseFolder + "allData.json"), TimeTempHumidData[].class);
+            for (TimeTempHumidData value : array) {
+                addData(value);
             }
         } catch (IOException ex) {
             Logger.getLogger(DatabaseList.class.getName()).log(Level.SEVERE, null, ex);
@@ -112,12 +112,20 @@ public class DatabaseList {
 
         if (listDayIndex != null) {
             List<TimeTempHumidData> TEMP_ALL_DATA = new ArrayList<>(ALL_DATA);
-            List<TimeTempHumidData> dayList = TEMP_ALL_DATA.subList(listDayIndex.getStartIndex(), listDayIndex.getEndIndex())
+            List<TimeTempHumidData> dayList = new ArrayList<>();
+            dayList.addAll(TEMP_ALL_DATA.subList(listDayIndex.getStartIndex(), listDayIndex.getEndIndex()));
+            try {
+                LocalDate date = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDate();
+                dayList.addAll(Arrays.asList(MAPPER.readValue(new File(baseFolder + date.getDayOfMonth() + "_" + date.getMonth().getValue() + "_" + date.getYear() + ".json"),
+                        TimeTempHumidData[].class)));
+            } catch (IOException ex) {
+                Logger.getLogger(DatabaseList.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return dayList
                     .stream()
-                    .sorted((d1, d2) -> Long.compare(d1.getTime(), d2.getTime()))
                     .distinct()
+                    .sorted((d1, d2) -> Long.compare(d1.getTime(), d2.getTime()))
                     .collect(Collectors.toList());
-            return dayList;
         } else {
             return new ArrayList<>();
         }

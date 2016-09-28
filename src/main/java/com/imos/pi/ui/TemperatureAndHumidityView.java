@@ -9,15 +9,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imos.pi.ui.utils.DashboardUtils;
 import com.imos.pi.database.DatabaseList;
 import com.imos.pi.database.TimeTempHumidData;
-import static com.imos.pi.ui.utils.DashboardConstant.*;
+import static com.imos.pi.ui.utils.DashboardConstant.DATA_NOT_AVAILABLE;
+import static com.imos.pi.ui.utils.DashboardConstant.DOUBLE_FORMAT;
+import static com.imos.pi.ui.utils.DashboardConstant.HUMIDITY;
+import static com.imos.pi.ui.utils.DashboardConstant.TEMPERATURE;
 import com.imos.pi.utils.TimeUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -84,11 +89,12 @@ public class TemperatureAndHumidityView implements Serializable {
     }
 
     private LineChartModel uploadChartData(LineChartModel chartModel) throws JSONException {
-        Calendar cal = GregorianCalendar.getInstance();
-        cal.setTime(date);
+        maxTemp = maxHumid = minTemp = minHumid = avgTemp = avgHumid = 0;
+        LocalTime timeValue = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalTime();
+        LocalDate dateValue = Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
         chartModel.setTitle(String.format("Temperature and Humidity Daily Chart on %s at time %s",
-                new SimpleDateFormat("dd-MMM-yy").format(date), cal.get(Calendar.HOUR) + ":" + 
-                        cal.get(Calendar.MINUTE) + " " + (cal.get(Calendar.AM_PM) == 0 ? "AM" : "PM")));
+                DateTimeFormatter.ofPattern("dd-MMM-yy").format(dateValue),
+                DateTimeFormatter.ofPattern("hh:mm a").format(timeValue)));
 
         ChartSeries temperatureSeries = new ChartSeries();
         temperatureSeries.setLabel(TEMPERATURE);
@@ -96,21 +102,19 @@ public class TemperatureAndHumidityView implements Serializable {
         humiditySeries.setLabel(HUMIDITY);
         final AtomicInteger valueCounter = new AtomicInteger(0);
         final AtomicInteger count = new AtomicInteger(0);
-        Collection<TimeTempHumidData> allData = databaseList.getOneDayData(cal.getTimeInMillis());
+        Collection<TimeTempHumidData> allData = databaseList.getOneDayData(date.getTime());
 
         if (allData.isEmpty()) {
             temperatureSeries.set(DATA_NOT_AVAILABLE, 50);
             humiditySeries.set(DATA_NOT_AVAILABLE, 60);
             Axis xAxis = chartModel.getAxis(AxisType.X);
             xAxis.setTickAngle(0);
-
-            maxTemp = maxHumid = minTemp = minHumid = avgTemp = avgHumid = 0;
         } else {
             allData.stream()
                     .forEach(d -> {
-                        cal.setTimeInMillis(d.getTime());
-                        int hval = cal.get(Calendar.HOUR_OF_DAY);
-                        int mval = cal.get(Calendar.MINUTE);
+                        LocalTime v = Instant.ofEpochMilli(d.getTime()).atZone(ZoneId.systemDefault()).toLocalTime();
+                        int hval = v.getHour();
+                        int mval = v.getMinute();
                         String time = (hval < 10 ? "0" + hval : hval) + "-" + (mval < 10 ? "0" + mval : mval);
                         double tempd = d.getData().getTemperature();
                         double humidd = d.getData().getHumidity();

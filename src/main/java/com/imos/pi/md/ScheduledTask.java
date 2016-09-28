@@ -5,7 +5,6 @@
  */
 package com.imos.pi.md;
 
-import com.imos.pi.utils.ProcessExecutor;
 import static com.imos.pi.common.RaspberryPiConstant.UNDER_SCORE;
 import com.imos.pi.service.SMTPMailService;
 import com.imos.pi.utils.TimeUtils;
@@ -24,7 +23,6 @@ import java.util.logging.Logger;
  */
 public class ScheduledTask extends TimerTask {
 
-    private ProcessExecutor executor;
     public boolean recordingStarted, recordingEnded, canSendMail, createMp4;
     private final String mp4boxCommand = "MP4Box", mp4SplitCommand = "MP4Box -splits 22000 ",
             endWithVideo = ".h264";

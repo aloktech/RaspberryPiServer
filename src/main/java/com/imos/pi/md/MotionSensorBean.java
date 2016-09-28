@@ -6,6 +6,7 @@
 package com.imos.pi.md;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.DependsOn;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
@@ -15,6 +16,7 @@ import javax.inject.Inject;
  * @author Alok Ranjan
  */
 @Singleton
+@DependsOn(value = {"AlarmPlayerBean"})
 @Startup
 public class MotionSensorBean {
 

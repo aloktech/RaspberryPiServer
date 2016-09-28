@@ -6,7 +6,6 @@
 package com.imos.pi.md;
 
 import static com.imos.pi.md.CameraConstant.*;
-import com.imos.pi.utils.SentMailEvent;
 import com.imos.pi.utils.ProcessExecutor;
 import static com.imos.pi.common.RaspberryPiConstant.KILL;
 import com.imos.pi.utils.TimeUtils;
@@ -16,7 +15,6 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.enterprise.event.Observes;
 import lombok.extern.java.Log;
 
 /**
@@ -103,10 +101,6 @@ public class MotionSensorListener implements GpioPinListenerDigital {
                 motionSensorCtrl.canSendMail.set(true);
             }
         }
-    }
-
-    public void sendMail(@Observes SentMailEvent sentMailEvent) {
-        sentMailEvent.sendMail();
     }
 
     public ProcessExecutor captureVideoForTime(long time) {

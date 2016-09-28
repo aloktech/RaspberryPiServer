@@ -6,6 +6,7 @@
 package com.imos.pi.th;
 
 import java.io.IOException;
+import javax.ejb.DependsOn;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -18,12 +19,13 @@ import lombok.extern.java.Log;
  */
 @Startup
 @Singleton
+@DependsOn(value = {"DatabaseList"})
 @Log
 public class TemperatureSensorBean {
 
     @Inject
     private TempAndHumidSensorController temperatureSensorBeanController;
-    
+
     @Schedule(second = "0", minute = "*/1", hour = "*", persistent = false)
     public void detectSensorSignalInEveryMinutes() {
         temperatureSensorBeanController.executeTheSensor();
@@ -37,7 +39,7 @@ public class TemperatureSensorBean {
             log.severe(ex.getMessage());
         }
     }
-    
+
 //    @Schedule(second = "0", minute = "*/30", hour = "*", persistent = false)
     public void saveDataAsJSONIn30Minutes() {
         try {

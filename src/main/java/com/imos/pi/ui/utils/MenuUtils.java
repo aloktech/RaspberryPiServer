@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.faces.bean.ManagedBean;
-import javax.inject.Singleton;
 import lombok.Getter;
 
 /**
@@ -18,7 +17,6 @@ import lombok.Getter;
  * @author Pintu
  */
 @Getter
-@Singleton
 @ManagedBean(name = "utility")
 public class MenuUtils {
 

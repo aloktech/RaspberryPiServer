@@ -13,13 +13,13 @@ import javax.inject.Inject;
  *
  * @author Alok
  */
-@Stateless
-public class MailEventManager {
-
-    @Inject
-    Event<SentMailEvent> events;
-    
-    public void sendMail() {
-        events.fire(new SentMailEvent());
-    }
-}
+//@Stateless
+//public class MailEventManager {
+//
+//    @Inject
+//    Event<SentMailEvent> events;
+//    
+//    public void sendMail() {
+//        events.fire(new SentMailEvent());
+//    }
+//}
