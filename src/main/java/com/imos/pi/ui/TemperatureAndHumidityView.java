@@ -6,13 +6,19 @@
 package com.imos.pi.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.imos.common.rest.HttpMethod;
+import com.imos.common.rest.RestClient;
 import com.imos.pi.ui.utils.DashboardUtils;
-import com.imos.pi.database.DatabaseList;
-import com.imos.pi.database.TimeTempHumidData;
+import static com.imos.pi.ui.utils.DashboardConstant.DATA;
 import static com.imos.pi.ui.utils.DashboardConstant.DATA_NOT_AVAILABLE;
 import static com.imos.pi.ui.utils.DashboardConstant.DOUBLE_FORMAT;
+import static com.imos.pi.ui.utils.DashboardConstant.HUMID;
 import static com.imos.pi.ui.utils.DashboardConstant.HUMIDITY;
+import static com.imos.pi.ui.utils.DashboardConstant.STATUS;
+import static com.imos.pi.ui.utils.DashboardConstant.SUCCESS;
+import static com.imos.pi.ui.utils.DashboardConstant.TEMP;
 import static com.imos.pi.ui.utils.DashboardConstant.TEMPERATURE;
+import static com.imos.pi.ui.utils.DashboardConstant.TIME;
 import com.imos.pi.utils.TimeUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -21,18 +27,20 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.inject.Inject;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SlideEndEvent;
 import org.primefaces.json.JSONException;
@@ -62,10 +70,12 @@ public class TemperatureAndHumidityView implements Serializable {
 
     private TimeUtils timeUtils;
 
+    private RestClient restClient;
+
     private final ObjectMapper MAPPER = new ObjectMapper();
 
-    @Inject
-    private DatabaseList databaseList;
+    private List<String> allDataPath;
+    private List<String> currentDataPath;
 
     @PostConstruct
     public void init() {
@@ -80,12 +90,27 @@ public class TemperatureAndHumidityView implements Serializable {
         chartModel.setShowPointLabels(false);
         chartModel.getAxes().put(AxisType.X, new CategoryAxis("Time"));
 
-        chartModel = uploadChartData(chartModel);
-
         Axis yAxis = chartModel.getAxis(AxisType.Y);
         yAxis.setLabel("%");
         yAxis.setMin(20);
         yAxis.setMax(80);
+
+        restClient = new RestClient();
+        restClient.setBaseUrl("http://10.0.0.10:8085/");
+        restClient.configure();
+
+        allDataPath = new ArrayList<>();
+        allDataPath.add("temphumid");
+        allDataPath.add("data");
+        allDataPath.add("day");
+        allDataPath.add("%time");
+
+        currentDataPath = new ArrayList<>();
+        currentDataPath.add("temphumid");
+        currentDataPath.add("data");
+        currentDataPath.add("current");
+
+        chartModel = uploadChartData(chartModel);
     }
 
     private LineChartModel uploadChartData(LineChartModel chartModel) throws JSONException {
@@ -102,41 +127,59 @@ public class TemperatureAndHumidityView implements Serializable {
         humiditySeries.setLabel(HUMIDITY);
         final AtomicInteger valueCounter = new AtomicInteger(0);
         final AtomicInteger count = new AtomicInteger(0);
-        Collection<TimeTempHumidData> allData = databaseList.getOneDayData(date.getTime());
 
-        if (allData.isEmpty()) {
-            temperatureSeries.set(DATA_NOT_AVAILABLE, 50);
-            humiditySeries.set(DATA_NOT_AVAILABLE, 60);
-            Axis xAxis = chartModel.getAxis(AxisType.X);
-            xAxis.setTickAngle(0);
-        } else {
-            allData.stream()
-                    .forEach(d -> {
-                        LocalTime v = Instant.ofEpochMilli(d.getTime()).atZone(ZoneId.systemDefault()).toLocalTime();
-                        int hval = v.getHour();
-                        int mval = v.getMinute();
-                        String time = (hval < 10 ? "0" + hval : hval) + "-" + (mval < 10 ? "0" + mval : mval);
-                        double tempd = d.getData().getTemperature();
-                        double humidd = d.getData().getHumidity();
-                        if (timeInterval > 0 && count.get() % timeInterval == 0) {
-                            setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
-                        } else if (timeInterval == 0) {
-                            setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
-                        }
-                        count.incrementAndGet();
-                    });
+        allDataPath.set(3, String.valueOf(date.getTime()));
+        restClient.setPaths(allDataPath);
+        restClient.setUrlPath();
+        restClient.setHttpMethod(HttpMethod.GET);
+
+        String strData = restClient.execute();
+        JSONObject jsonData = new JSONObject(strData);
+        if (jsonData.getString(STATUS).equals(SUCCESS)) {
+            JSONArray arrayData = jsonData.getJSONArray(DATA);
+            for (int index = 0, size = arrayData.length(); index < size; index++) {
+                try {
+                    JSONObject json = arrayData.getJSONObject(index);
+                    LocalTime v = Instant.ofEpochMilli(json.getLong(TIME)).atZone(ZoneId.systemDefault()).toLocalTime();
+                    int hval = v.getHour();
+                    int mval = v.getMinute();
+                    String time = (hval < 10 ? "0" + hval : hval) + "-" + (mval < 10 ? "0" + mval : mval);
+                    double tempd = json.getJSONObject(DATA).getDouble(TEMP);
+                    double humidd = json.getJSONObject(DATA).getDouble(HUMID);
+                    if (timeInterval > 0 && count.get() % timeInterval == 0) {
+                        setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
+                    } else if (timeInterval == 0) {
+                        setTempAndHumidValue(tempd, humidd, temperatureSeries, time, humiditySeries, valueCounter);
+                    }
+                    count.incrementAndGet();
+                } catch (Exception e) {
+                }
+            }
+
             valueCounter.set(valueCounter.get() == 0 ? count.get() : valueCounter.get());
-            avgTemp = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgTemp / valueCounter.get()));
-            avgHumid = Double.parseDouble(new DecimalFormat(DOUBLE_FORMAT).format(avgHumid / valueCounter.get()));
+            DecimalFormat format = new DecimalFormat(DOUBLE_FORMAT);
+            avgTemp = Double.parseDouble(format.format(avgTemp / valueCounter.get()));
+            avgHumid = Double.parseDouble(format.format(avgHumid / valueCounter.get()));
 
-            TimeTempHumidData current = databaseList.getCurrentValue();
-            if (current != null) {
-                currHumid = current.getData().getHumidity();
-                currTemp = current.getData().getTemperature();
+            restClient.setPaths(currentDataPath);
+            restClient.setUrlPath();
+            restClient.setHttpMethod(HttpMethod.GET);
+
+            strData = restClient.execute();
+            System.out.println(strData);
+            jsonData = new JSONObject(strData);
+            if (jsonData.getString(STATUS).equals(SUCCESS)) {
+                currHumid = jsonData.getJSONObject(DATA).getJSONObject(DATA).getDouble(HUMID);
+                currTemp = jsonData.getJSONObject(DATA).getJSONObject(DATA).getDouble(TEMP);
             }
 
             Axis xAxis = chartModel.getAxis(AxisType.X);
             xAxis.setTickAngle(90);
+        } else {
+            temperatureSeries.set(DATA_NOT_AVAILABLE, 50);
+            humiditySeries.set(DATA_NOT_AVAILABLE, 60);
+            Axis xAxis = chartModel.getAxis(AxisType.X);
+            xAxis.setTickAngle(0);
         }
 
         chartModel.clear();

@@ -5,8 +5,8 @@
  */
 package com.imos.pi.alarm;
 
+import com.imos.common.utils.ProcessExecutor;
 import com.imos.pi.common.ScheduledExecution;
-import com.imos.pi.utils.ProcessExecutor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

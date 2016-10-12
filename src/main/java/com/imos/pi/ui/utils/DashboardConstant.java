@@ -24,6 +24,9 @@ public final class DashboardConstant {
     public final static String DATA = "data";
     public final static String TEMP = "temp";
     public final static String HUMID = "humid";
+    public final static String STATUS = "status";
+    public final static String SUCCESS = "SUCCESS";
+    public final static String FAILURE = "FAILURE";
     public final static String DATA_NOT_AVAILABLE = "Data not Available";
     public final static String DOUBLE_FORMAT = "##.##";
     public final static String HUMIDITY = "Humidity";

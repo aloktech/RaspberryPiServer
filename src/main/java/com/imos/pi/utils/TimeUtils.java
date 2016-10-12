@@ -5,19 +5,26 @@
  */
 package com.imos.pi.utils;
 
+import com.imos.common.utils.Scheduler;
 import com.imos.pi.common.DayLight;
 import static com.imos.pi.common.RaspberryPiConstant.SLASH;
 import static com.imos.pi.common.RaspberryPiConstant.UNDER_SCORE;
 import static com.imos.pi.common.RaspberryPiConstant.COLON;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import javax.ejb.Singleton;
+import javax.inject.Inject;
 
 /**
  *
  * @author Alok
  */
+@Singleton
 public class TimeUtils {
-
+    
+    public TimeUtils() {
+    }
+    
     private final Calendar INSTANCE = GregorianCalendar.getInstance();
 
     public String getTimeWithDate() {

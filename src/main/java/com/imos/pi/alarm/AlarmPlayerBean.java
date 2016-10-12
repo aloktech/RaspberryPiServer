@@ -9,7 +9,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.Timer;
-import javax.ejb.DependsOn;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -20,7 +19,6 @@ import javax.ejb.Startup;
  */
 @Startup
 @Singleton
-@DependsOn(value = {"TemperatureSensorBean"})
 public class AlarmPlayerBean {
 
     @Schedule(second = "0", minute = "0", hour = "0", persistent = false)
